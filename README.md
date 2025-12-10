@@ -9,7 +9,6 @@ Your `.env.local` is fully set up with:
 - ✅ Google Gemini AI (Content generation)
 - ✅ LinkedIn API (OAuth + Posting)
 - ✅ Resend Email (Notifications)
-- ✅ Cron Secret (Auto-publishing)
 
 ## 🚀 Quick Start (3 Steps)
 
@@ -55,7 +54,6 @@ Open [http://localhost:3000](http://localhost:3000)
 ### Features
 - ✅ AI Content Generation (Google Gemini)
 - ✅ AI Image Generation
-- ✅ Auto-Publishing (Cron jobs)
 - ✅ Calendar Scheduling
 - ✅ Real LinkedIn Analytics
 - ✅ Lead Generation & Tracking
@@ -79,7 +77,7 @@ Open [http://localhost:3000](http://localhost:3000)
 - Google Gemini AI
 - LinkedIn API
 - Resend (Email)
-- Vercel (Hosting + Cron)
+- Vercel (Hosting)
 
 ## 🚀 Deploy to Vercel
 
@@ -98,7 +96,6 @@ GOOGLE_AI_API_KEY
 LINKEDIN_CLIENT_ID
 LINKEDIN_CLIENT_SECRET
 RESEND_API_KEY
-CRON_SECRET
 NEXT_PUBLIC_APP_URL
 ```
 
@@ -107,12 +104,6 @@ NEXT_PUBLIC_APP_URL
 1. **Update OAuth URLs:**
    - Google: Add `https://dnnzizxurbqvpkuroxxp.supabase.co/auth/v1/callback`
    - LinkedIn: Add `https://your-app.vercel.app/api/auth/linkedin/callback`
-
-2. **Verify Cron Jobs:**
-   - Check Vercel Dashboard → Cron Jobs
-   - Should see: `/api/cron/publish` (4 times daily: 9am, 12pm, 3pm, 6pm)
-   - Should see: `/api/cron/sync-analytics` (daily at 8pm)
-   - Note: Vercel Hobby plan allows daily cron jobs only
 
 ## ✅ Status: 100% Complete & Production Ready!
 
