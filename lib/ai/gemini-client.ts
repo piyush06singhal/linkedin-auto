@@ -1,0 +1,222 @@
+// Google Gemini AI Client for Content Generation
+
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
+
+export interface GeneratePostOptions {
+  topic?: string
+  tone?: 'professional' | 'casual' | 'inspirational' | 'educational'
+  length?: 'short' | 'medium' | 'long'
+  includeHashtags?: boolean
+  includeEmojis?: boolean
+}
+
+export class GeminiClient {
+  private apiKey: string
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey
+  }
+
+  // Generate a LinkedIn post
+  async generatePost(options: GeneratePostOptions = {}): Promise<string> {
+    const {
+      topic = 'professional development',
+      tone = 'professional',
+      length = 'medium',
+      includeHashtags = true,
+      includeEmojis = false,
+    } = options
+
+    const prompt = this.buildPrompt(topic, tone, length, includeHashtags, includeEmojis)
+
+    const response = await fetch(
+      `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Failed to generate content: ${error}`)
+    }
+
+    const data = await response.json()
+    const generatedText = data.candidates[0]?.content?.parts[0]?.text
+
+    if (!generatedText) {
+      throw new Error('No content generated')
+    }
+
+    return generatedText.trim()
+  }
+
+  // Generate multiple post variations
+  async generatePostVariations(
+    topic: string,
+    count: number = 3
+  ): Promise<string[]> {
+    const posts: string[] = []
+
+    for (let i = 0; i < count; i++) {
+      const tone = ['professional', 'casual', 'inspirational'][i % 3] as any
+      const post = await this.generatePost({ topic, tone })
+      posts.push(post)
+    }
+
+    return posts
+  }
+
+  // Improve/rewrite an existing post
+  async improvePost(originalPost: string): Promise<string> {
+    const prompt = `You are a LinkedIn content expert. Improve the following LinkedIn post to make it more engaging, professional, and likely to get high engagement. Keep the core message but enhance the writing, structure, and impact.
+
+Original post:
+${originalPost}
+
+Improved post:`
+
+    const response = await fetch(
+      `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+          },
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to improve post')
+    }
+
+    const data = await response.json()
+    return data.candidates[0]?.content?.parts[0]?.text.trim()
+  }
+
+  // Generate post ideas based on topic
+  async generatePostIdeas(topic: string, count: number = 5): Promise<string[]> {
+    const prompt = `Generate ${count} engaging LinkedIn post ideas about "${topic}". Each idea should be a brief one-sentence description of what the post would be about. Make them diverse and interesting.
+
+Format: Return only the ideas, one per line, numbered.`
+
+    const response = await fetch(
+      `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to generate ideas')
+    }
+
+    const data = await response.json()
+    const text = data.candidates[0]?.content?.parts[0]?.text
+    
+    // Parse the numbered list
+    const ideas = text
+      .split('\n')
+      .filter((line: string) => line.trim())
+      .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+
+    return ideas
+  }
+
+  // Build the prompt for post generation
+  private buildPrompt(
+    topic: string,
+    tone: string,
+    length: string,
+    includeHashtags: boolean,
+    includeEmojis: boolean
+  ): string {
+    const lengthGuide = {
+      short: '100-150 words',
+      medium: '150-250 words',
+      long: '250-400 words',
+    }
+
+    let prompt = `You are an expert LinkedIn content creator. Write an engaging LinkedIn post about "${topic}".
+
+Requirements:
+- Tone: ${tone}
+- Length: ${lengthGuide[length as keyof typeof lengthGuide]}
+- Make it engaging and valuable
+- Use line breaks for readability
+- Start with a hook to grab attention
+- Include a call-to-action at the end`
+
+    if (includeEmojis) {
+      prompt += '\n- Use relevant emojis sparingly (2-3 max)'
+    }
+
+    if (includeHashtags) {
+      prompt += '\n- End with 3-5 relevant hashtags'
+    }
+
+    prompt += '\n\nWrite the post now:'
+
+    return prompt
+  }
+}
+
+// Helper function to create client
+export function createGeminiClient(): GeminiClient {
+  const apiKey = process.env.GOOGLE_AI_API_KEY
+  
+  if (!apiKey) {
+    throw new Error('GOOGLE_AI_API_KEY is not configured')
+  }
+
+  return new GeminiClient(apiKey)
+}
