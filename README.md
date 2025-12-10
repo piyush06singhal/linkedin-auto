@@ -110,8 +110,9 @@ NEXT_PUBLIC_APP_URL
 
 2. **Verify Cron Jobs:**
    - Check Vercel Dashboard → Cron Jobs
-   - Should see: `/api/cron/publish` (every minute)
-   - Should see: `/api/cron/sync-analytics` (every hour)
+   - Should see: `/api/cron/publish` (4 times daily: 9am, 12pm, 3pm, 6pm)
+   - Should see: `/api/cron/sync-analytics` (daily at 8pm)
+   - Note: Vercel Hobby plan allows daily cron jobs only
 
 ## ✅ Status: 100% Complete & Production Ready!
 
