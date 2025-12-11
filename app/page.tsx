@@ -12,11 +12,11 @@ export default function Home() {
           </div>
           <div className="hidden md:flex space-x-8">
             <Link href="/" className="hover:text-primary">Home</Link>
-            <Link href="#features" className="hover:text-primary">Features</Link>
-            <Link href="#pricing" className="hover:text-primary">Pricing</Link>
-            <Link href="#about" className="hover:text-primary">About</Link>
-            <Link href="#blog" className="hover:text-primary">Blog</Link>
-            <Link href="#contact" className="hover:text-primary">Contact</Link>
+            <Link href="/features" className="hover:text-primary">Features</Link>
+            <Link href="/pricing" className="hover:text-primary">Pricing</Link>
+            <Link href="/about" className="hover:text-primary">About</Link>
+            <Link href="/blog" className="hover:text-primary">Blog</Link>
+            <Link href="/contact" className="hover:text-primary">Contact</Link>
           </div>
           <div className="flex space-x-4">
             <Link href="/login" className="text-primary hover:underline font-medium">Log in</Link>
@@ -31,14 +31,14 @@ export default function Home() {
       <section className="bg-gradient-to-b from-blue-50 to-white py-20">
         <div className="container mx-auto px-6 text-center">
           <div className="inline-block bg-blue-100 text-primary px-4 py-2 rounded-full text-sm mb-6 font-medium">
-            ✨ AI-Powered Content Creation
+            🚀 Transform Your LinkedIn Strategy
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Grow Your LinkedIn<br />Presence with <span className="text-primary">AI-Generated Content</span>
+            Automate Your LinkedIn<br />Success with <span className="text-primary">Smart AI Technology</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Generate a week's worth of engaging LinkedIn posts in minutes. 
-            Our AI understands your expertise and creates content that resonates with your audience.
+            Create compelling LinkedIn content in seconds, not hours. Our intelligent platform learns your style 
+            and generates posts that drive real engagement and grow your professional network.
           </p>
           <div className="flex justify-center space-x-4 mb-12">
             <Link href="/signup" className="bg-primary text-white px-8 py-4 rounded-full text-lg hover:bg-secondary transition shadow-lg">
