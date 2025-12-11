@@ -31,7 +31,7 @@ export class GeminiClient {
 
     try {
       const response = await fetch(
-        `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+        `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -111,7 +111,7 @@ ${originalPost}
 Improved post:`
 
     const response = await fetch(
-      `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -136,7 +136,8 @@ Improved post:`
     )
 
     if (!response.ok) {
-      throw new Error('Failed to improve post')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(`Failed to improve post: ${errorData.error?.message || response.statusText}`)
     }
 
     const data = await response.json()
@@ -150,7 +151,7 @@ Improved post:`
 Format: Return only the ideas, one per line, numbered.`
 
     const response = await fetch(
-      `${GEMINI_API_BASE}/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -171,7 +172,8 @@ Format: Return only the ideas, one per line, numbered.`
     )
 
     if (!response.ok) {
-      throw new Error('Failed to generate ideas')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(`Failed to generate ideas: ${errorData.error?.message || response.statusText}`)
     }
 
     const data = await response.json()
