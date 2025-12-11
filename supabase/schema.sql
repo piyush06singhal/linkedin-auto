@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
@@ -16,7 +16,7 @@ CREATE TABLE public.users (
 );
 
 -- Posts table
-CREATE TABLE public.posts (
+CREATE TABLE IF NOT EXISTS public.posts (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   content TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE public.posts (
 );
 
 -- Templates table
-CREATE TABLE public.templates (
+CREATE TABLE IF NOT EXISTS public.templates (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE public.templates (
 );
 
 -- Goals table
-CREATE TABLE public.goals (
+CREATE TABLE IF NOT EXISTS public.goals (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   target_posts_per_week INTEGER DEFAULT 7,
@@ -57,7 +57,7 @@ CREATE TABLE public.goals (
 );
 
 -- Analytics table
-CREATE TABLE public.analytics (
+CREATE TABLE IF NOT EXISTS public.analytics (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE,
@@ -66,14 +66,28 @@ CREATE TABLE public.analytics (
   recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Contact submissions table
+CREATE TABLE IF NOT EXISTS public.contact_submissions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  company TEXT,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  status TEXT CHECK (status IN ('new', 'in_progress', 'resolved')) DEFAULT 'new',
+  notes TEXT
+);
+
 -- Create indexes for better performance
-CREATE INDEX idx_posts_user_id ON public.posts(user_id);
-CREATE INDEX idx_posts_status ON public.posts(status);
-CREATE INDEX idx_posts_scheduled_for ON public.posts(scheduled_for);
-CREATE INDEX idx_templates_user_id ON public.templates(user_id);
-CREATE INDEX idx_goals_user_id ON public.goals(user_id);
-CREATE INDEX idx_analytics_user_id ON public.analytics(user_id);
-CREATE INDEX idx_analytics_post_id ON public.analytics(post_id);
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON public.posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_status ON public.posts(status);
+CREATE INDEX IF NOT EXISTS idx_posts_scheduled_for ON public.posts(scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_templates_user_id ON public.templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_goals_user_id ON public.goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON public.analytics(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_post_id ON public.analytics(post_id);
 
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -81,6 +95,26 @@ ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contact_submissions ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can view own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can create own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can update own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can delete own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users can view own templates" ON public.templates;
+DROP POLICY IF EXISTS "Users can create own templates" ON public.templates;
+DROP POLICY IF EXISTS "Users can update own templates" ON public.templates;
+DROP POLICY IF EXISTS "Users can delete own templates" ON public.templates;
+DROP POLICY IF EXISTS "Users can view own goals" ON public.goals;
+DROP POLICY IF EXISTS "Users can create own goals" ON public.goals;
+DROP POLICY IF EXISTS "Users can update own goals" ON public.goals;
+DROP POLICY IF EXISTS "Users can view own analytics" ON public.analytics;
+DROP POLICY IF EXISTS "Users can create own analytics" ON public.analytics;
+DROP POLICY IF EXISTS "Anyone can submit contact form" ON public.contact_submissions;
+DROP POLICY IF EXISTS "Authenticated users can view submissions" ON public.contact_submissions;
 
 -- RLS Policies for users table
 CREATE POLICY "Users can view own profile" ON public.users
@@ -132,6 +166,19 @@ CREATE POLICY "Users can view own analytics" ON public.analytics
 CREATE POLICY "Users can create own analytics" ON public.analytics
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- RLS Policies for contact_submissions table
+CREATE POLICY "Anyone can submit contact form"
+  ON public.contact_submissions
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+CREATE POLICY "Authenticated users can view submissions"
+  ON public.contact_submissions
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -140,6 +187,12 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
+DROP TRIGGER IF EXISTS update_posts_updated_at ON public.posts;
+DROP TRIGGER IF EXISTS update_templates_updated_at ON public.templates;
+DROP TRIGGER IF EXISTS update_goals_updated_at ON public.goals;
 
 -- Triggers for updated_at
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
@@ -169,39 +222,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 -- Trigger to create profile on signup
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-
--- Contact submissions table
-CREATE TABLE public.contact_submissions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  company TEXT,
-  subject TEXT NOT NULL,
-  message TEXT NOT NULL,
-  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  status TEXT CHECK (status IN ('new', 'in_progress', 'resolved')) DEFAULT 'new',
-  notes TEXT
-);
-
--- Enable RLS for contact_submissions
-ALTER TABLE public.contact_submissions ENABLE ROW LEVEL SECURITY;
-
--- Policy: Anyone can insert contact submissions
-CREATE POLICY "Anyone can submit contact form"
-  ON public.contact_submissions
-  FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
-
--- Policy: Only authenticated users can view submissions (for admin panel)
-CREATE POLICY "Authenticated users can view submissions"
-  ON public.contact_submissions
-  FOR SELECT
-  TO authenticated
-  USING (true);

@@ -54,31 +54,29 @@ export async function POST(request: Request) {
           to: ['support@linkedai.com'],
           reply_to: email,
           subject: `Contact Form: ${subject}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0A66C2;">New Contact Form Submission</h2>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>From:</strong> ${firstName} ${lastName}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${company ? `<p><strong>Company:</strong> ${company}</p>` : ''}
-            <p><strong>Subject:</strong> ${subject}</p>
-          </div>
-          
-          <div style="background-color: #ffffff; padding: 20px; border-left: 4px solid #0A66C2; margin: 20px 0;">
-            <h3 style="margin-top: 0;">Message:</h3>
-            <p style="white-space: pre-wrap;">${message}</p>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-          
-          <p style="color: #666; font-size: 12px;">
-            This email was sent from the LinkedAI contact form.
-          </p>
-        </div>
-      `,
-    })
-
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #0A66C2;">New Contact Form Submission</h2>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>From:</strong> ${firstName} ${lastName}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                ${company ? `<p><strong>Company:</strong> ${company}</p>` : ''}
+                <p><strong>Subject:</strong> ${subject}</p>
+              </div>
+              
+              <div style="background-color: #ffffff; padding: 20px; border-left: 4px solid #0A66C2; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Message:</h3>
+                <p style="white-space: pre-wrap;">${message}</p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+              
+              <p style="color: #666; font-size: 12px;">
+                This email was sent from the LinkedAI contact form.
+              </p>
+            </div>
+          `,
         })
         
         // Send confirmation email to user
