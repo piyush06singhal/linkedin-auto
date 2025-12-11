@@ -20,24 +20,42 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      },
-    })
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        console.error('Signup error:', error)
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.session) {
+        // User is automatically signed in
+        setSuccess(true)
+        setLoading(false)
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 2000)
+      } else if (data.user && !data.session) {
+        // Email confirmation required
+        setSuccess(true)
+        setLoading(false)
+        setError('Please check your email to confirm your account before signing in.')
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      setError('An unexpected error occurred. Please try again.')
       setLoading(false)
-    } else {
-      setSuccess(true)
-      setLoading(false)
-      // Redirect to dashboard after successful signup
-      setTimeout(() => router.push('/dashboard'), 2000)
     }
   }
 

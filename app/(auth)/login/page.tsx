@@ -18,16 +18,31 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        console.error('Login error:', error)
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.session) {
+        console.log('Login successful, redirecting to dashboard')
+        // Force a hard redirect to ensure middleware picks up the session
+        window.location.href = '/dashboard'
+      } else {
+        setError('Login failed. Please try again.')
+        setLoading(false)
+      }
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      setError('An unexpected error occurred. Please try again.')
       setLoading(false)
-    } else {
-      router.push('/dashboard')
     }
   }
 
