@@ -24,12 +24,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Drafts', href: '/dashboard/drafts', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
     { name: 'Calendar', href: '/dashboard/calendar', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
     { name: 'Scheduled', href: '/dashboard/scheduled', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { name: 'Content Ideas', href: '/dashboard/content-ideas', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
     { name: 'Analytics', href: '/dashboard/analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
   ]
 
   const bottomNavigation = [
     { name: 'Lead Generation', href: '/dashboard/leads', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', badge: 'New' },
     { name: 'Viral Predictor', href: '/dashboard/viral', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', badge: 'New' },
+    { name: 'Workspaces', href: '/dashboard/workspace', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
   ]
 
   return (
@@ -51,12 +53,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Create Workspace Button */}
         {sidebarOpen && (
           <div className="px-4 py-4">
-            <button className="w-full flex items-center justify-center space-x-2 text-primary border border-primary rounded-lg py-2 hover:bg-blue-50 transition">
+            <Link href="/dashboard/workspace" className="w-full flex items-center justify-center space-x-2 text-primary border border-primary rounded-lg py-2 hover:bg-blue-50 transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               <span className="text-sm font-medium">Create Workspace</span>
-            </button>
+            </Link>
           </div>
         )}
 
@@ -113,8 +115,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </nav>
 
-        {/* Settings */}
-        <div className="px-4 py-4 border-t border-gray-200">
+        {/* Settings & Logout */}
+        <div className="px-4 py-4 border-t border-gray-200 space-y-1">
           <Link
             href="/dashboard/settings"
             className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg transition ${
@@ -129,6 +131,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
             {sidebarOpen && <span>Settings</span>}
           </Link>
+          
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition text-red-600 hover:bg-red-50"
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {sidebarOpen && <span>Logout</span>}
+          </button>
         </div>
       </aside>
 
