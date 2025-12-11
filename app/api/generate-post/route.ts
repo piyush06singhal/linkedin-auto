@@ -8,15 +8,22 @@ export async function POST(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     
     // Check authentication
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (authError || !user) {
+      console.error('Auth error:', authError)
+      return NextResponse.json({ error: 'Unauthorized. Please log in again.' }, { status: 401 })
     }
 
     // Get request body
     const body = await request.json()
     const { topic, tone, length, includeHashtags, includeEmojis, action } = body
+
+    // Validate API key
+    if (!process.env.GOOGLE_AI_API_KEY) {
+      console.error('GOOGLE_AI_API_KEY not configured')
+      return NextResponse.json({ error: 'AI service not configured. Please contact support.' }, { status: 500 })
+    }
 
     // Create Gemini client
     const gemini = createGeminiClient()
