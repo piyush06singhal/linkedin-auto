@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
@@ -28,26 +29,31 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-20">
-        <div className="container mx-auto px-6 text-center">
-          <div className="inline-block bg-blue-100 text-primary px-4 py-2 rounded-full text-sm mb-6 font-medium">
-            🚀 Transform Your LinkedIn Strategy
+      <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-white py-20 animate-fade-in overflow-hidden relative">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{animationDelay: '2s'}}></div>
+        
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <div className="inline-block bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full text-sm mb-6 font-medium animate-scale-in shadow-lg">
+            ✨ Join 10,000+ Professionals Growing on LinkedIn
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            Automate Your LinkedIn<br />Success with <span className="text-primary">Smart AI Technology</span>
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-slide-up">
+            Your LinkedIn Growth,<br />
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Powered by AI</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Create compelling LinkedIn content in seconds, not hours. Our intelligent platform learns your style 
-            and generates posts that drive real engagement and grow your professional network.
+          <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto animate-slide-up leading-relaxed">
+            Stop spending hours crafting posts. Let our AI create engaging content that sounds like you, 
+            schedule it automatically, and watch your influence grow while you focus on what matters.
           </p>
-          <div className="flex justify-center space-x-4 mb-12">
-            <Link href="/signup" className="bg-primary text-white px-8 py-4 rounded-full text-lg hover:bg-secondary transition shadow-lg">
-              Start Free Trial →
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 animate-slide-up">
+            <Link href="/signup" className="bg-gradient-to-r from-primary to-secondary text-white px-10 py-5 rounded-full text-lg font-medium hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              Start Free - No Credit Card →
             </Link>
-            <button className="border-2 border-primary text-primary px-8 py-4 rounded-full text-lg hover:bg-blue-50 transition">
-              ▶ Watch Demo
+            <button className="border-2 border-primary text-primary px-10 py-5 rounded-full text-lg font-medium hover:bg-primary hover:text-white transition-all duration-300 transform hover:scale-105">
+              ▶ See How It Works
             </button>
           </div>
+          <p className="text-sm text-gray-500 mb-12 animate-slide-up">14-day free trial • Cancel anytime • No credit card required</p>
           
           {/* Dashboard Preview */}
           <div className="max-w-5xl mx-auto mt-12">
@@ -370,47 +376,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-primary rounded-lg"></div>
-                <span className="text-xl font-bold">LinkedAI</span>
-              </div>
-              <p className="text-gray-400">Grow your LinkedIn presence with AI-powered content.</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="#features" className="hover:text-white">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="#" className="hover:text-white">Roadmap</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="#about" className="hover:text-white">About</Link></li>
-                <li><Link href="#blog" className="hover:text-white">Blog</Link></li>
-                <li><Link href="#contact" className="hover:text-white">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="#" className="hover:text-white">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-white">Terms</Link></li>
-                <li><Link href="#" className="hover:text-white">Security</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 LinkedAI. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

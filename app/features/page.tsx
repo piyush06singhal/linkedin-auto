@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 
 export default function FeaturesPage() {
   return (
@@ -28,11 +29,14 @@ export default function FeaturesPage() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20">
+      <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-white py-20 animate-fade-in">
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-5xl font-bold mb-6">Powerful Features for LinkedIn Success</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Everything you need to dominate LinkedIn and build your professional brand
+          <div className="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm mb-6 font-medium animate-scale-in">
+            🚀 All-in-One LinkedIn Platform
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-slide-up">Powerful Features for LinkedIn Success</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto animate-slide-up">
+            Everything you need to dominate LinkedIn and build your professional brand with cutting-edge AI technology
           </p>
         </div>
       </section>
@@ -40,12 +44,12 @@ export default function FeaturesPage() {
       {/* Features Grid */}
       <section className="py-20">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-slide-up">
             
             {/* AI Content Generation */}
-            <div className="flex gap-6">
+            <div className="flex gap-6 group hover:bg-blue-50 p-6 rounded-2xl transition-all duration-300">
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
@@ -249,12 +253,7 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-400">&copy; 2024 LinkedAI. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

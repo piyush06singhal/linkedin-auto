@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 
 export default function AboutPage() {
   return (
@@ -174,12 +175,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-400">&copy; 2024 LinkedAI. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }
