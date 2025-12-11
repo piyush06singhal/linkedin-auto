@@ -21,7 +21,6 @@ export default function DashboardPage() {
   })
   const [loading, setLoading] = useState(true)
   const [recentPosts, setRecentPosts] = useState<any[]>([])
-  const [showConnectLinkedIn, setShowConnectLinkedIn] = useState(false)
 
   useEffect(() => {
     checkUser()
@@ -41,38 +40,74 @@ export default function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Fetch user profile
-    const { data: profile } = await supabase
-      .from('users')
-      .select('linkedin_connected')
-      .eq('id', user.id)
-      .single()
+    // Fetch ALL posts for accurate stats
+    const { data: allPosts } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', user.id)
 
-    setShowConnectLinkedIn(!profile?.linkedin_connected)
-
-    // Fetch posts stats
-    const { data: posts } = await supabase
+    // Fetch recent posts for display
+    const { data: recentPostsData } = await supabase
       .from('posts')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(3)
 
-    if (posts) {
-      setRecentPosts(posts)
-      const drafts = posts.filter(p => p.status === 'draft').length
-      const scheduled = posts.filter(p => p.status === 'scheduled').length
-      const published = posts.filter(p => p.status === 'published').length
+    if (recentPostsData) {
+      setRecentPosts(recentPostsData)
+    }
+
+    if (allPosts) {
+      const drafts = allPosts.filter(p => p.status === 'draft').length
+      const scheduled = allPosts.filter(p => p.status === 'scheduled').length
+      const published = allPosts.filter(p => p.status === 'published').length
+
+      // Calculate real engagement rate from published posts
+      const publishedPosts = allPosts.filter(p => p.status === 'published')
+      let avgEngagementRate = 0
+      let totalReach = 0
+      
+      if (publishedPosts.length > 0) {
+        const totalEngagement = publishedPosts.reduce((sum, post) => {
+          return sum + (post.engagement_rate || 0)
+        }, 0)
+        avgEngagementRate = Math.round(totalEngagement / publishedPosts.length)
+        
+        totalReach = publishedPosts.reduce((sum, post) => {
+          return sum + (post.reach || 0)
+        }, 0)
+      }
+
+      // Calculate weekly posts (last 7 days)
+      const oneWeekAgo = new Date()
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+      const weeklyPosts = allPosts.filter(p => {
+        const postDate = new Date(p.created_at)
+        return postDate >= oneWeekAgo && p.status === 'published'
+      }).length
 
       setStats({
-        postsGenerated: posts.length,
+        postsGenerated: allPosts.length,
         drafts,
         scheduled,
         published,
         weeklyGoal: 7,
-        currentWeekPosts: published,
-        engagementRate: 89,
-        reachIncrease: 156,
+        currentWeekPosts: weeklyPosts,
+        engagementRate: avgEngagementRate,
+        reachIncrease: totalReach,
+      })
+    } else {
+      // No posts yet - show zeros
+      setStats({
+        postsGenerated: 0,
+        drafts: 0,
+        scheduled: 0,
+        published: 0,
+        weeklyGoal: 7,
+        currentWeekPosts: 0,
+        engagementRate: 0,
+        reachIncrease: 0,
       })
     }
 
@@ -161,32 +196,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* LinkedIn Connection Banner */}
-        {showConnectLinkedIn && (
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 mb-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-1">Connect Your LinkedIn Account</h3>
-                  <p className="text-blue-100">Start publishing posts automatically to your LinkedIn profile</p>
-                </div>
-              </div>
-              <button
-                onClick={() => window.location.href = '/api/auth/linkedin'}
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition shadow-lg whitespace-nowrap"
-              >
-                Connect LinkedIn
-              </button>
-            </div>
-          </div>
-        )}
+
 
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -197,10 +207,10 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">+{stats.reachIncrease}%</span>
+              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{stats.reachIncrease > 0 ? 'Active' : 'Start'}</span>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.reachIncrease}%</div>
-            <p className="text-green-100 text-sm">Reach Increase</p>
+            <div className="text-3xl font-bold mb-1">{stats.reachIncrease.toLocaleString()}</div>
+            <p className="text-green-100 text-sm">Total Reach</p>
           </div>
 
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
@@ -210,7 +220,7 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                 </svg>
               </div>
-              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">+5%</span>
+              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{stats.engagementRate > 0 ? `${stats.engagementRate}%` : 'N/A'}</span>
             </div>
             <div className="text-3xl font-bold mb-1">{stats.engagementRate}%</div>
             <p className="text-purple-100 text-sm">Engagement Rate</p>

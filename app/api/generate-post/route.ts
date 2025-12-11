@@ -68,8 +68,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, result })
   } catch (error: any) {
     console.error('Generate post error:', error)
+    
+    // Provide user-friendly error messages
+    let errorMessage = error.message || 'Failed to generate content'
+    
+    if (error.message.includes('overloaded')) {
+      errorMessage = 'The AI service is currently busy. Please try again in a few seconds.'
+    } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+      errorMessage = 'Too many requests. Please wait a moment and try again.'
+    } else if (error.message.includes('API key')) {
+      errorMessage = 'API configuration error. Please contact support.'
+    }
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to generate content' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

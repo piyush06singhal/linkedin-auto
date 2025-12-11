@@ -19,6 +19,41 @@ export class GeminiClient {
     this.apiKey = apiKey
   }
 
+  // Helper method to retry API calls with exponential backoff
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    initialDelay: number = 1000
+  ): Promise<T> {
+    let lastError: any
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn()
+      } catch (error: any) {
+        lastError = error
+        
+        // Check if error is retryable (rate limit, overload, etc.)
+        const isRetryable = 
+          error.message.includes('overloaded') ||
+          error.message.includes('429') ||
+          error.message.includes('503') ||
+          error.message.includes('rate limit')
+        
+        if (!isRetryable || attempt === maxRetries - 1) {
+          throw error
+        }
+        
+        // Exponential backoff: wait longer each time
+        const delay = initialDelay * Math.pow(2, attempt)
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+    
+    throw lastError
+  }
+
   // Generate a LinkedIn post
   async generatePost(options: GeneratePostOptions = {}): Promise<string> {
     const {
@@ -31,7 +66,7 @@ export class GeminiClient {
 
     const prompt = this.buildPrompt(topic, tone, length, includeHashtags, includeEmojis)
 
-    try {
+    return this.retryWithBackoff(async () => {
       const response = await fetch(
         `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
         {
@@ -87,13 +122,7 @@ export class GeminiClient {
       }
 
       return generatedText.trim()
-    } catch (error: any) {
-      console.error('Gemini API Error Details:', error)
-      if (error.message.includes('API key') || error.message.includes('API_KEY_INVALID')) {
-        throw new Error('Invalid API key. Please check your GOOGLE_AI_API_KEY in .env.local')
-      }
-      throw error
-    }
+    })
   }
 
   // Generate multiple post variations
@@ -121,7 +150,8 @@ ${originalPost}
 
 Improved post:`
 
-    const response = await fetch(
+    return this.retryWithBackoff(async () => {
+      const response = await fetch(
       `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
@@ -152,8 +182,9 @@ Improved post:`
       throw new Error(`Failed to improve post: ${response.status} - ${errorText}`)
     }
 
-    const data = await response.json()
-    return data.candidates[0]?.content?.parts[0]?.text.trim()
+      const data = await response.json()
+      return data.candidates[0]?.content?.parts[0]?.text.trim()
+    })
   }
 
   // Generate post ideas based on topic
@@ -162,7 +193,8 @@ Improved post:`
 
 Format: Return only the ideas, one per line, numbered.`
 
-    const response = await fetch(
+    return this.retryWithBackoff(async () => {
+      const response = await fetch(
       `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
@@ -189,16 +221,17 @@ Format: Return only the ideas, one per line, numbered.`
       throw new Error(`Failed to generate ideas: ${response.status} - ${errorText}`)
     }
 
-    const data = await response.json()
-    const text = data.candidates[0]?.content?.parts[0]?.text
-    
-    // Parse the numbered list
-    const ideas = text
-      .split('\n')
-      .filter((line: string) => line.trim())
-      .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+      const data = await response.json()
+      const text = data.candidates[0]?.content?.parts[0]?.text
+      
+      // Parse the numbered list
+      const ideas = text
+        .split('\n')
+        .filter((line: string) => line.trim())
+        .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
 
-    return ideas
+      return ideas
+    })
   }
 
   // Build the prompt for post generation
