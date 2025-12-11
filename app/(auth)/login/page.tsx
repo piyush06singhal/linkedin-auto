@@ -32,9 +32,11 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        console.log('Login successful, redirecting to dashboard')
-        // Force a hard redirect to ensure middleware picks up the session
-        window.location.href = '/dashboard'
+        console.log('Login successful, session:', data.session)
+        // Wait a moment for the session to be stored
+        await new Promise(resolve => setTimeout(resolve, 500))
+        // Use router.push instead of window.location
+        router.push('/dashboard')
       } else {
         setError('Login failed. Please try again.')
         setLoading(false)
