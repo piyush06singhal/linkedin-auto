@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 export default function CalendarPage() {
   const router = useRouter()
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedTime, setSelectedTime] = useState('09:00')
   const [drafts, setDrafts] = useState<any[]>([])
   const [selectedDraft, setSelectedDraft] = useState<string>('')
@@ -81,7 +82,25 @@ export default function CalendarPage() {
     return { daysInMonth, startingDayOfWeek }
   }
 
-  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(selectedDate)
+  const handlePrevMonth = () => {
+    const newDate = new Date(currentMonth)
+    newDate.setMonth(newDate.getMonth() - 1)
+    setCurrentMonth(newDate)
+  }
+
+  const handleNextMonth = () => {
+    const newDate = new Date(currentMonth)
+    newDate.setMonth(newDate.getMonth() + 1)
+    setCurrentMonth(newDate)
+  }
+
+  const handleToday = () => {
+    const today = new Date()
+    setCurrentMonth(today)
+    setSelectedDate(today)
+  }
+
+  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth)
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
   return (
@@ -103,26 +122,26 @@ export default function CalendarPage() {
           <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">
-                {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+                {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
               </h2>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setSelectedDate(new Date(selectedDate.setMonth(selectedDate.getMonth() - 1)))}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  onClick={handlePrevMonth}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
-                  onClick={() => setSelectedDate(new Date())}
-                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-blue-50 rounded-lg"
+                  onClick={handleToday}
+                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-blue-50 rounded-lg transition"
                 >
                   Today
                 </button>
                 <button
-                  onClick={() => setSelectedDate(new Date(selectedDate.setMonth(selectedDate.getMonth() + 1)))}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  onClick={handleNextMonth}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -145,7 +164,7 @@ export default function CalendarPage() {
               
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1
-                const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day)
+                const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
                 const isSelected = date.toDateString() === selectedDate.toDateString()
                 const isToday = date.toDateString() === new Date().toDateString()
                 

@@ -6,25 +6,29 @@ import Link from 'next/link'
 
 export default function GeneratePage() {
   const router = useRouter()
-  const [topic, setTopic] = useState('')
+  const [mainTopic, setMainTopic] = useState('')
+  const [niche, setNiche] = useState('')
+  const [targetAudience, setTargetAudience] = useState('')
+  const [description, setDescription] = useState('')
   const [tone, setTone] = useState('professional')
-  const [length, setLength] = useState('medium')
-  const [includeHashtags, setIncludeHashtags] = useState(true)
-  const [includeEmojis, setIncludeEmojis] = useState(false)
-  const [generatedContent, setGeneratedContent] = useState('')
+  const [numberOfPosts, setNumberOfPosts] = useState(7)
+  const [generatedPosts, setGeneratedPosts] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleGenerate = async () => {
-    if (!topic.trim()) {
-      setError('Please enter a topic')
+    if (!description.trim() && !mainTopic.trim()) {
+      setError('Please provide a topic or description')
       return
     }
 
     setLoading(true)
     setError('')
+    setGeneratedPosts([])
 
     try {
+      const topic = description || `${mainTopic}${niche ? ` - ${niche}` : ''}${targetAudience ? ` for ${targetAudience}` : ''}`
+      
       const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,9 +36,9 @@ export default function GeneratePage() {
           action: 'generate',
           topic,
           tone,
-          length,
-          includeHashtags,
-          includeEmojis,
+          length: 'medium',
+          includeHashtags: true,
+          includeEmojis: false,
         }),
       })
 
@@ -44,7 +48,7 @@ export default function GeneratePage() {
         throw new Error(data.error || 'Failed to generate')
       }
 
-      setGeneratedContent(data.result)
+      setGeneratedPosts([data.result])
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -52,214 +56,306 @@ export default function GeneratePage() {
     }
   }
 
-  const handleSaveDraft = async () => {
-    if (!generatedContent) return
-
+  const handleSaveDraft = async (content: string) => {
     try {
       const response = await fetch('/api/save-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: generatedContent,
+          content,
           status: 'draft',
         }),
       })
 
       if (response.ok) {
-        router.push('/dashboard/drafts')
+        alert('Saved to drafts!')
       }
     } catch (err) {
-      setError('Failed to save draft')
+      alert('Failed to save draft')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg"></div>
-              <span className="text-xl font-bold">LinkedAI</span>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/dashboard" className="text-gray-600 hover:text-primary">Dashboard</Link>
-              <Link href="/dashboard/generate" className="text-primary font-medium">Generate</Link>
-              <Link href="/dashboard/templates" className="text-gray-600 hover:text-primary">Templates</Link>
-              <Link href="/dashboard/drafts" className="text-gray-600 hover:text-primary">Drafts</Link>
-              <Link href="/dashboard/calendar" className="text-gray-600 hover:text-primary">Calendar</Link>
-            </nav>
-          </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6">
+          <Link href="/" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-primary rounded-lg"></div>
+            <span className="text-xl font-bold">LinkedAI</span>
+          </Link>
         </div>
-      </header>
+
+        <nav className="flex-1 px-4 space-y-1">
+          <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Dashboard</span>
+          </Link>
+
+          <Link href="/dashboard/generate" className="flex items-center space-x-3 px-4 py-3 text-primary bg-blue-50 rounded-lg font-medium">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Generate</span>
+          </Link>
+
+          <Link href="/dashboard/templates" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Templates</span>
+          </Link>
+
+          <Link href="/dashboard/drafts" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Drafts</span>
+          </Link>
+
+          <Link href="/dashboard/calendar" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Calendar</span>
+          </Link>
+
+          <Link href="/dashboard/scheduled" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Scheduled</span>
+          </Link>
+        </nav>
+
+        <div className="p-4 border-t border-gray-200">
+          <button className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition w-full">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Generate LinkedIn Post</h1>
-          <p className="text-gray-600">Create engaging content with AI in seconds</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Settings Panel */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 sticky top-6">
-              <h2 className="text-lg font-bold mb-4">Settings</h2>
-
-              <div className="space-y-4">
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-5xl mx-auto p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Topic *
-                  </label>
-                  <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="e.g., leadership tips, productivity hacks"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
+                  <h1 className="text-3xl font-bold">AI Content Generator</h1>
+                  <p className="text-gray-600">Create engaging LinkedIn posts powered by AI in seconds</p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tone
-                  </label>
-                  <select
-                    value={tone}
-                    onChange={(e) => setTone(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="professional">Professional</option>
-                    <option value="casual">Casual</option>
-                    <option value="inspirational">Inspirational</option>
-                    <option value="educational">Educational</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Length
-                  </label>
-                  <select
-                    value={length}
-                    onChange={(e) => setLength(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="short">Short (100-150 words)</option>
-                    <option value="medium">Medium (150-250 words)</option>
-                    <option value="long">Long (250-400 words)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={includeHashtags}
-                      onChange={(e) => setIncludeHashtags(e.target.checked)}
-                      className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Include hashtags</span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={includeEmojis}
-                      onChange={(e) => setIncludeEmojis(e.target.checked)}
-                      className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Include emojis</span>
-                  </label>
-                </div>
-
-                <button
-                  onClick={handleGenerate}
-                  disabled={loading || !topic.trim()}
-                  className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-secondary transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Generate Post
-                    </>
-                  )}
-                </button>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Posts remaining</div>
+                <div className="text-2xl font-bold text-primary">10</div>
               </div>
             </div>
           </div>
 
-          {/* Content Panel */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold">Generated Content</h2>
-                {generatedContent && (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handleSaveDraft}
-                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-                    >
-                      Save as Draft
-                    </button>
-                    <button
-                      onClick={handleGenerate}
-                      className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
-                    >
-                      Regenerate
-                    </button>
-                  </div>
-                )}
+          {/* Main Form */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">
+            {/* Description */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-2 mb-3">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <label className="text-lg font-semibold">What do you want to write about?</label>
               </div>
+              <p className="text-sm text-gray-500 mb-3">Describe your topic in detail. Be specific about what you want to communicate.</p>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition resize-none"
+                placeholder="Example: Write a post about AI in healthcare, focusing on how machine learning helps doctors make better diagnoses. Emphasize patient outcomes and the future of medical technology..."
+              />
+              <div className="text-xs text-gray-400 mt-1">{description.length} characters • Be as detailed as you like</div>
+            </div>
 
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              {generatedContent ? (
+            {/* Specify Your Focus */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <h3 className="text-lg font-semibold">Specify Your Focus</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">Help us understand your content niche better (optional)</p>
+              
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <textarea
-                    value={generatedContent}
-                    onChange={(e) => setGeneratedContent(e.target.value)}
-                    className="w-full h-96 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                    placeholder="Your generated content will appear here..."
+                  <label className="block text-sm font-medium text-gray-700 mb-2"># Main Topic</label>
+                  <input
+                    type="text"
+                    value={mainTopic}
+                    onChange={(e) => setMainTopic(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition"
+                    placeholder="e.g., Artificial Intelligence"
                   />
-                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                    <span>{generatedContent.length} characters</span>
-                    <span>{generatedContent.split(/\s+/).length} words</span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">🎯 Niche/Sub-topic</label>
+                  <input
+                    type="text"
+                    value={niche}
+                    onChange={(e) => setNiche(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition"
+                    placeholder="e.g., Healthcare Applications"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">👥 Target Audience</label>
+                  <input
+                    type="text"
+                    value={targetAudience}
+                    onChange={(e) => setTargetAudience(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition"
+                    placeholder="e.g., Healthcare Professionals"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Writing Style & Tone */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-2 mb-4">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                <h3 className="text-lg font-semibold">Writing Style & Tone</h3>
+              </div>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition bg-white"
+              >
+                <option value="professional">📊 Professional - Clear and business-focused</option>
+                <option value="casual">💬 Casual - Friendly and conversational</option>
+                <option value="inspirational">✨ Inspirational - Motivating and uplifting</option>
+                <option value="educational">📚 Educational - Informative and teaching-focused</option>
+              </select>
+            </div>
+
+            {/* Number of Posts */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Number of Posts</h3>
+                <div className="text-3xl font-bold text-primary">{numberOfPosts}</div>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="14"
+                value={numberOfPosts}
+                onChange={(e) => setNumberOfPosts(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>1</span>
+                <span>14</span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Generate Button */}
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Generate {numberOfPosts} Post{numberOfPosts > 1 ? 's' : ''}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Generated Posts */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8">
+            <h2 className="text-2xl font-bold mb-6">Generated Posts</h2>
+            
+            {generatedPosts.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Ready to create?</h3>
+                <p className="text-gray-500 mb-6">Add your topics, choose a writing style, and let AI generate engaging LinkedIn posts for you.</p>
+                <div className="flex items-center justify-center space-x-8 text-sm text-gray-400">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Add topics</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Pick style</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Generate</span>
                   </div>
                 </div>
-              ) : (
-                <div className="h-96 flex flex-col items-center justify-center text-center text-gray-400">
-                  <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p className="text-lg font-medium mb-2">No content yet</p>
-                  <p className="text-sm">Enter a topic and click "Generate Post" to create content</p>
-                </div>
-              )}
-            </div>
-
-            {/* Tips */}
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <h3 className="font-medium text-blue-900 mb-2">💡 Tips for better results</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Be specific: "5 tips for remote team management" vs "leadership"</li>
-                <li>• Try different tones to see what resonates with your audience</li>
-                <li>• Edit the generated content to add your personal touch</li>
-                <li>• Use the regenerate button to get different variations</li>
-              </ul>
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {generatedPosts.map((post, index) => (
+                  <div key={index} className="border-2 border-gray-200 rounded-xl p-6 hover:border-primary transition">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="px-3 py-1 bg-blue-100 text-primary text-sm font-medium rounded-full">Post {index + 1}</span>
+                        <span className="text-sm text-gray-500">{post.length} characters</span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => navigator.clipboard.writeText(post)}
+                          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          onClick={() => handleSaveDraft(post)}
+                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm font-medium"
+                        >
+                          Save Draft
+                        </button>
+                      </div>
+                    </div>
+                    <div className="prose max-w-none">
+                      <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed">{post}</pre>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
