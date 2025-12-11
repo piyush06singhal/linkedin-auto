@@ -322,60 +322,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4">Get in Touch</h2>
-              <p className="text-xl text-gray-600">Have questions? We'd love to hear from you.</p>
-            </div>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="John"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                <textarea
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Tell us how we can help..."
-                ></textarea>
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-primary text-white py-4 rounded-lg font-medium hover:bg-secondary transition"
-              >
-                Send Message
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
-
       <Footer />
     </main>
   )

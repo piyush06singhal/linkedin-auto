@@ -109,35 +109,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center mb-16">Meet the Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div className="text-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold">Sarah Chen</h3>
-              <p className="text-gray-600">CEO & Co-Founder</p>
-            </div>
-            <div className="text-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold">Michael Rodriguez</h3>
-              <p className="text-gray-600">CTO & Co-Founder</p>
-            </div>
-            <div className="text-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold">Emily Watson</h3>
-              <p className="text-gray-600">Head of Product</p>
-            </div>
-            <div className="text-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold">David Kim</h3>
-              <p className="text-gray-600">Lead AI Engineer</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="py-20 bg-primary text-white">
         <div className="container mx-auto px-6">
