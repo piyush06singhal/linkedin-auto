@@ -1,8 +1,8 @@
 // Google Gemini AI Client for Content Generation
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
-// Correct model name for v1beta API
-const GEMINI_MODEL = 'gemini-1.5-flash-latest'
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1'
+// Use v1 API with gemini-2.5-flash model
+const GEMINI_MODEL = 'models/gemini-2.5-flash'
 
 export interface GeneratePostOptions {
   topic?: string
