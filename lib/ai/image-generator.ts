@@ -39,22 +39,27 @@ export class ImageGenerator {
 
     try {
       // Use official Unsplash API with your access key
-      if (this.apiKey) {
-        console.log('Using Unsplash API with key')
+      if (this.apiKey && this.apiKey.length > 10) {
+        console.log('Using Unsplash API with key for query:', searchQuery)
         
         const orientation = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '4:5' ? 'portrait' : 'squarish'
         const apiUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(searchQuery)}&orientation=${orientation}&client_id=${this.apiKey}`
         
+        console.log('Calling Unsplash API...')
         const response = await fetch(apiUrl)
         
         if (response.ok) {
           const data = await response.json()
-          console.log('Unsplash API success:', data.id)
+          console.log('✅ Unsplash API success! Image ID:', data.id)
+          console.log('Image description:', data.description || data.alt_description)
           // Return the regular size image URL (best quality for web)
           return data.urls.regular || data.urls.full
         } else {
-          console.error('Unsplash API error:', response.status, await response.text())
+          const errorText = await response.text()
+          console.error('❌ Unsplash API error:', response.status, errorText)
         }
+      } else {
+        console.log('⚠️ No Unsplash API key found, using fallback')
       }
       
       // Fallback: Use Picsum Photos (reliable alternative)
@@ -109,5 +114,6 @@ export class ImageGenerator {
 export function createImageGenerator(): ImageGenerator {
   // Use Unsplash Access Key for official API
   const apiKey = (globalThis as any).process?.env?.UNSPLASH_ACCESS_KEY || ''
+  console.log('Creating ImageGenerator with API key:', apiKey ? 'Key present' : 'No key')
   return new ImageGenerator(apiKey)
 }
