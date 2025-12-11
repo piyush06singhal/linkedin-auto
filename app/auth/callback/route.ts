@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/dashboard'
+  const type = requestUrl.searchParams.get('type')
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies })
@@ -16,8 +16,13 @@ export async function GET(request: Request) {
       // Redirect to login with error
       return NextResponse.redirect(new URL('/login?error=confirmation_failed', request.url))
     }
+
+    // If this is an email confirmation (signup), redirect to login with success message
+    if (type === 'signup') {
+      return NextResponse.redirect(new URL('/login?confirmed=true', request.url))
+    }
   }
 
-  // Redirect to dashboard or specified next page after successful authentication
-  return NextResponse.redirect(new URL(next, request.url))
+  // For OAuth or other auth types, redirect to dashboard
+  return NextResponse.redirect(new URL('/dashboard', request.url))
 }
