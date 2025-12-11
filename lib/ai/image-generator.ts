@@ -38,32 +38,29 @@ export class ImageGenerator {
     const { width, height } = dimensions[aspectRatio]
 
     try {
-      // If API key is available, use official Unsplash API for better results
+      // Use official Unsplash API with your access key
       if (this.apiKey) {
-        const apiUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(searchQuery)}&orientation=${aspectRatio === '16:9' ? 'landscape' : aspectRatio === '4:5' ? 'portrait' : 'squarish'}&client_id=${this.apiKey}`
+        console.log('Using Unsplash API with key')
+        
+        const orientation = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '4:5' ? 'portrait' : 'squarish'
+        const apiUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(searchQuery)}&orientation=${orientation}&client_id=${this.apiKey}`
         
         const response = await fetch(apiUrl)
         
         if (response.ok) {
           const data = await response.json()
-          // Return the regular size image URL
+          console.log('Unsplash API success:', data.id)
+          // Return the regular size image URL (best quality for web)
           return data.urls.regular || data.urls.full
+        } else {
+          console.error('Unsplash API error:', response.status, await response.text())
         }
       }
       
-      // Fallback to Unsplash Source (no API key needed)
-      const unsplashUrl = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(searchQuery)}`
-      
-      // Verify the image exists
-      const response = await fetch(unsplashUrl, { method: 'HEAD' })
-      
-      if (response.ok) {
-        return unsplashUrl
-      }
-      
-      // Fallback to a simpler search
-      const fallbackUrl = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(prompt.split(' ').slice(0, 3).join(' '))}`
-      return fallbackUrl
+      // Fallback: Use Picsum Photos (reliable alternative)
+      console.log('Using Picsum fallback')
+      const picsumUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`
+      return picsumUrl
       
     } catch (error) {
       console.error('Image generation error:', error)
