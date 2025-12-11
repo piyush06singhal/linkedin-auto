@@ -291,8 +291,9 @@ export default function LeadsPage() {
                           </svg>
                           <span>Discover Leads</span>
                         </Link>
-                      </td>
-                    </tr>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
