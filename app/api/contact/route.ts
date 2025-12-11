@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     // Send email using Resend
     const { data, error } = await resend.emails.send({
       from: 'LinkedAI Contact <onboarding@resend.dev>', // Use your verified domain
-      to: 'support@linkedai.com', // Your support email
-      replyTo: email,
+      to: ['support@linkedai.com'], // Your support email
+      reply_to: email,
       subject: `Contact Form: ${subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
