@@ -1,8 +1,8 @@
 // Google Gemini AI Client for Content Generation
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1'
-// Use v1 API with gemini-2.5-flash model
-const GEMINI_MODEL = 'models/gemini-2.5-flash'
+// Use v1 API with gemini-2.5-flash model (latest stable version)
+const GEMINI_MODEL = 'gemini-2.5-flash'
 
 export interface GeneratePostOptions {
   topic?: string
@@ -60,7 +60,16 @@ export class GeminiClient {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
+        const errorText = await response.text()
+        console.error('Gemini API Response:', errorText)
+        
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          throw new Error(`Gemini API Error: ${response.status} - ${errorText}`)
+        }
+        
         const errorMessage = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`
         throw new Error(`Gemini API Error: ${errorMessage}`)
       }
@@ -79,9 +88,9 @@ export class GeminiClient {
 
       return generatedText.trim()
     } catch (error: any) {
-      console.error('Gemini API Error:', error)
-      if (error.message.includes('API key')) {
-        throw new Error('Invalid API key. Please check your configuration.')
+      console.error('Gemini API Error Details:', error)
+      if (error.message.includes('API key') || error.message.includes('API_KEY_INVALID')) {
+        throw new Error('Invalid API key. Please check your GOOGLE_AI_API_KEY in .env.local')
       }
       throw error
     }
@@ -138,8 +147,9 @@ Improved post:`
     )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Failed to improve post: ${errorData.error?.message || response.statusText}`)
+      const errorText = await response.text()
+      console.error('Gemini API Error:', errorText)
+      throw new Error(`Failed to improve post: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -174,8 +184,9 @@ Format: Return only the ideas, one per line, numbered.`
     )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(`Failed to generate ideas: ${errorData.error?.message || response.statusText}`)
+      const errorText = await response.text()
+      console.error('Gemini API Error:', errorText)
+      throw new Error(`Failed to generate ideas: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -230,7 +241,8 @@ Requirements:
 
 // Helper function to create client
 export function createGeminiClient(): GeminiClient {
-  const apiKey = process.env.GOOGLE_AI_API_KEY
+  // Get API key from environment (server-side only)
+  const apiKey = (globalThis as any).process?.env?.GOOGLE_AI_API_KEY
   
   if (!apiKey) {
     throw new Error('GOOGLE_AI_API_KEY is not configured')
