@@ -1,6 +1,8 @@
 // Google Gemini AI Client for Content Generation
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta'
+// Correct model name for v1beta API
+const GEMINI_MODEL = 'gemini-1.5-flash-latest'
 
 export interface GeneratePostOptions {
   topic?: string
@@ -31,7 +33,7 @@ export class GeminiClient {
 
     try {
       const response = await fetch(
-        `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+        `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -111,7 +113,7 @@ ${originalPost}
 Improved post:`
 
     const response = await fetch(
-      `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+      `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -151,7 +153,7 @@ Improved post:`
 Format: Return only the ideas, one per line, numbered.`
 
     const response = await fetch(
-      `${GEMINI_API_BASE}/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+      `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
       {
         method: 'POST',
         headers: {
