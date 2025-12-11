@@ -39,18 +39,20 @@ export default function SignupPage() {
         return
       }
 
-      if (data.session) {
-        // User is automatically signed in
-        setSuccess(true)
-        setLoading(false)
+      // Always show success and ask user to check email
+      setSuccess(true)
+      setLoading(false)
+      
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        // Email confirmation is required (most common case)
+        console.log('Email confirmation required for:', data.user.email)
+      } else if (data.session) {
+        // User is automatically signed in (email confirmation disabled)
+        console.log('User signed in automatically')
         setTimeout(() => {
-          window.location.href = '/dashboard'
-        }, 2000)
-      } else if (data.user && !data.session) {
-        // Email confirmation required
-        setSuccess(true)
-        setLoading(false)
-        setError('Please check your email to confirm your account before signing in.')
+          router.push('/dashboard')
+        }, 3000)
       }
     } catch (err: any) {
       console.error('Unexpected error:', err)
@@ -95,15 +97,54 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-12 text-center border border-gray-100">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-12 border border-gray-100">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Check Your Email! 📧</h2>
+            <p className="text-gray-600 text-lg mb-6">
+              We've sent a confirmation link to <strong>{email}</strong>
+            </p>
           </div>
-          <h2 className="text-3xl font-bold mb-3">Welcome Aboard! 🎉</h2>
-          <p className="text-gray-600 text-lg">Your account has been created successfully. Taking you to your dashboard...</p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
+            <h3 className="font-bold text-blue-900 mb-3">Next Steps:</h3>
+            <ol className="space-y-2 text-blue-800">
+              <li className="flex items-start">
+                <span className="font-bold mr-2">1.</span>
+                <span>Open your email inbox and look for our confirmation email</span>
+              </li>
+              <li className="flex items-start">
+                <span className="font-bold mr-2">2.</span>
+                <span>Click the confirmation link in the email</span>
+              </li>
+              <li className="flex items-start">
+                <span className="font-bold mr-2">3.</span>
+                <span>You'll be automatically redirected to your dashboard</span>
+              </li>
+            </ol>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <p className="text-sm text-yellow-800">
+              <strong>💡 Tip:</strong> If you don't see the email, check your spam folder. 
+              Add <strong>noreply@mail.app.supabase.io</strong> to your contacts to ensure future emails reach your inbox.
+            </p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-500 mb-4">Didn't receive the email?</p>
+            <button
+              onClick={() => setSuccess(false)}
+              className="text-primary font-medium hover:underline"
+            >
+              Try signing up again
+            </button>
+          </div>
         </div>
       </div>
     )
