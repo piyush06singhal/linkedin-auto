@@ -8,31 +8,33 @@ export default function ViralPredictorPage() {
   const [prediction, setPrediction] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
-  const analyzePrediction = () => {
+  const analyzePrediction = async () => {
     setLoading(true)
 
-    // Simulate AI analysis
-    setTimeout(() => {
-      const score = Math.floor(Math.random() * 30) + 70 // 70-100
-      const engagement = Math.floor(Math.random() * 500) + 500 // 500-1000
-      const reach = Math.floor(Math.random() * 5000) + 5000 // 5000-10000
+    try {
+      console.log('🔍 Analyzing post with AI...')
+      console.log('📝 Content:', content)
 
-      setPrediction({
-        score,
-        engagement,
-        reach,
-        suggestions: [
-          score < 80 ? 'Add a question to increase engagement' : 'Great hook! Keep it.',
-          content.length < 150 ? 'Consider adding more context' : 'Good length for LinkedIn',
-          !content.includes('#') ? 'Add 3-5 relevant hashtags' : 'Hashtags look good',
-          !content.includes('?') ? 'Questions get 2x more comments' : 'Question included ✓',
-        ],
-        bestTime: '9:00 AM - 11:00 AM',
-        bestDay: 'Tuesday or Thursday',
+      const response = await fetch('/api/analyze-viral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
       })
 
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to analyze')
+      }
+
+      console.log('✅ AI Analysis complete:', data)
+      setPrediction(data.prediction)
+    } catch (error: any) {
+      console.error('❌ Analysis error:', error)
+      alert(error.message || 'Failed to analyze post')
+    } finally {
       setLoading(false)
-    }, 2000)
+    }
   }
 
   return (
@@ -120,9 +122,9 @@ export default function ViralPredictorPage() {
 
                 {/* Suggestions */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="font-bold mb-4">💡 Suggestions</h3>
+                  <h3 className="font-bold mb-4">💡 AI Suggestions</h3>
                   <ul className="space-y-2">
-                    {prediction.suggestions.map((suggestion: string, i: number) => (
+                    {prediction.suggestions?.map((suggestion: string, i: number) => (
                       <li key={i} className="flex items-start space-x-2 text-sm">
                         <span className="text-primary mt-0.5">•</span>
                         <span className="text-gray-700">{suggestion}</span>
@@ -130,6 +132,38 @@ export default function ViralPredictorPage() {
                     ))}
                   </ul>
                 </div>
+
+                {/* Strengths & Weaknesses */}
+                {(prediction.strengths || prediction.weaknesses) && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    {prediction.strengths && prediction.strengths.length > 0 && (
+                      <div className="mb-4">
+                        <h3 className="font-bold mb-2 text-green-600">✓ Strengths</h3>
+                        <ul className="space-y-1">
+                          {prediction.strengths.map((strength: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-green-500 mr-2">+</span>
+                              {strength}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {prediction.weaknesses && prediction.weaknesses.length > 0 && (
+                      <div>
+                        <h3 className="font-bold mb-2 text-orange-600">⚠ Areas to Improve</h3>
+                        <ul className="space-y-1">
+                          {prediction.weaknesses.map((weakness: string, i: number) => (
+                            <li key={i} className="text-sm text-gray-700 flex items-start">
+                              <span className="text-orange-500 mr-2">-</span>
+                              {weakness}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
