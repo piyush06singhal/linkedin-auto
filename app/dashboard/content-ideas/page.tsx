@@ -21,10 +21,24 @@ export default function ContentIdeasPage() {
   const [generating, setGenerating] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
 
   const categories = ['All', 'Thought Leadership', 'Personal Story', 'Industry News', 'Tips & Tricks', 'Career Advice', 'Trending Topics']
+  
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [cooldown])
 
   const handleGenerateMore = async () => {
+    if (cooldown > 0) {
+      alert(`Please wait ${cooldown} seconds before generating more ideas.`)
+      return
+    }
+    
     setGenerating(true)
     
     try {
@@ -42,6 +56,10 @@ export default function ContentIdeasPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        // Handle rate limit errors
+        if (response.status === 429) {
+          setCooldown(60) // Set 60 second cooldown for quota errors
+        }
         throw new Error(data.error || 'Failed to generate ideas')
       }
 
@@ -49,6 +67,9 @@ export default function ContentIdeasPage() {
       
       // Add new ideas to existing ones (unlimited)
       setIdeas(prevIdeas => [...prevIdeas, ...data.ideas])
+      
+      // Set a 3 second cooldown after successful generation
+      setCooldown(3)
     } catch (error: any) {
       console.error('❌ Error generating ideas:', error)
       alert(error.message || 'Failed to generate ideas. Please try again.')
@@ -193,13 +214,15 @@ export default function ContentIdeasPage() {
               </div>
               <button
                 onClick={handleGenerateMore}
-                disabled={generating}
+                disabled={generating || cooldown > 0}
                 className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 flex items-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>{generating ? 'Generating...' : 'Generate More'}</span>
+                <span>
+                  {generating ? 'Generating...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Generate More'}
+                </span>
               </button>
             </div>
           </div>

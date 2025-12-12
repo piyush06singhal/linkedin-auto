@@ -3,6 +3,10 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createGeminiClient } from '@/lib/ai/gemini-client'
 
+// Rate limiting: Track last request time per user
+const lastRequestTime = new Map<string, number>()
+const MIN_REQUEST_INTERVAL = 3000 // 3 seconds between requests
+
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -12,6 +16,21 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Rate limiting check
+    const now = Date.now()
+    const lastRequest = lastRequestTime.get(user.id) || 0
+    const timeSinceLastRequest = now - lastRequest
+    
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      const waitTime = Math.ceil((MIN_REQUEST_INTERVAL - timeSinceLastRequest) / 1000)
+      return NextResponse.json(
+        { error: `Please wait ${waitTime} seconds before generating more ideas to avoid rate limits.` },
+        { status: 429 }
+      )
+    }
+    
+    lastRequestTime.set(user.id, now)
 
     const body = await request.json()
     const { category, count = 6 } = body
@@ -94,6 +113,17 @@ Generate the JSON array now:`
     return NextResponse.json({ success: true, ideas: ideasWithIds })
   } catch (error: any) {
     console.error('Generate ideas error:', error)
+    
+    // Handle quota exceeded errors specifically
+    if (error.message.includes('Quota exceeded') || error.message.includes('quota')) {
+      return NextResponse.json(
+        { 
+          error: 'API quota limit reached. Please wait a minute and try again. The free tier has a limit of 20 requests per minute.' 
+        },
+        { status: 429 }
+      )
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Failed to generate ideas' },
       { status: 500 }
