@@ -243,6 +243,25 @@ export default function ScheduledPage() {
             </div>
           </div>
 
+          {/* Auto-Publish Info */}
+          {linkedInConnected && scheduledPosts.length > 0 && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 mb-1">Automatic Publishing Enabled</h3>
+                  <p className="text-gray-700 text-sm">
+                    Posts will be automatically published to LinkedIn at their scheduled time. 
+                    The system checks every 5 minutes for posts that are ready to publish. 
+                    You can also use "Publish Now" to post immediately.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* LinkedIn Warning */}
           {!linkedInConnected && scheduledPosts.length > 0 && (
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
@@ -253,8 +272,8 @@ export default function ScheduledPage() {
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 mb-1">LinkedIn Not Connected</h3>
                   <p className="text-gray-700 text-sm mb-3">
-                    Connect your LinkedIn account in Settings to enable publishing. 
-                    Once connected, you can use the "Publish Now" button to post to LinkedIn.
+                    Connect your LinkedIn account in Settings to enable automatic publishing. 
+                    Posts will be published automatically at their scheduled time.
                   </p>
                   <Link
                     href="/dashboard/settings"
@@ -264,7 +283,7 @@ export default function ScheduledPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>Go to Settings</span>
+                    <span>Connect LinkedIn</span>
                   </Link>
                 </div>
               </div>
