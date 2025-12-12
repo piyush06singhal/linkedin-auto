@@ -44,26 +44,41 @@ export default function GeneratePage() {
     try {
       const topic = description || `${mainTopic}${niche ? ` - ${niche}` : ''}${targetAudience ? ` for ${targetAudience}` : ''}`
       
-      const response = await fetch('/api/generate-post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate',
-          topic,
-          tone,
-          length: 'medium',
-          includeHashtags: true,
-          includeEmojis: false,
-        }),
-      })
+      const posts: string[] = []
+      
+      // Generate multiple posts based on numberOfPosts
+      for (let i = 0; i < numberOfPosts; i++) {
+        const response = await fetch('/api/generate-post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate',
+            topic,
+            tone,
+            length: 'medium',
+            includeHashtags: true,
+            includeEmojis: tone === 'casual' || tone === 'inspirational',
+          }),
+        })
 
-      const data = await response.json()
+        const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate')
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate')
+        }
+
+        posts.push(data.result)
+        
+        // Update UI progressively as posts are generated
+        setGeneratedPosts([...posts])
+        
+        // Small delay between requests to avoid rate limiting
+        if (i < numberOfPosts - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
       }
-
-      setGeneratedPosts([data.result])
+      
+      setGeneratedPosts(posts)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -235,14 +250,14 @@ export default function GeneratePage() {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating...</span>
+                  <span>Generating {generatedPosts.length}/{numberOfPosts} posts...</span>
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  <span>Generate {numberOfPosts} Post{numberOfPosts > 1 ? 's' : ''}</span>
+                  <span>Generate {numberOfPosts} Post{numberOfPosts > 1 ? 's' : ''} with AI</span>
                 </>
               )}
             </button>

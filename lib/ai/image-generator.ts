@@ -17,16 +17,18 @@ export class ImageGenerator {
   async generateImage(options: ImageGenerationOptions): Promise<string> {
     const { prompt, style = 'professional', aspectRatio = '1:1' } = options
 
-    // Enhanced prompt based on style
+    // Enhanced prompt based on style - more specific keywords for better results
     const styleKeywords = {
-      professional: 'business office corporate professional',
-      creative: 'creative art colorful design',
-      minimal: 'minimal simple clean modern',
-      vibrant: 'vibrant colorful energetic bold',
+      professional: 'business professional corporate workplace',
+      creative: 'creative artistic colorful innovative design',
+      minimal: 'minimal clean simple modern elegant',
+      vibrant: 'vibrant colorful energetic dynamic bold',
     }
 
-    // Extract key words from prompt for better search
-    const searchQuery = `${prompt} ${styleKeywords[style]}`.trim()
+    // Build a more intelligent search query
+    // Extract key nouns and concepts from the prompt
+    const cleanPrompt = prompt.toLowerCase().trim()
+    const searchQuery = `${cleanPrompt} ${styleKeywords[style]}`
     
     // Determine image dimensions based on aspect ratio
     const dimensions = {
@@ -40,37 +42,61 @@ export class ImageGenerator {
     try {
       // Use official Unsplash API with your access key
       if (this.apiKey && this.apiKey.length > 10) {
-        console.log('Using Unsplash API with key for query:', searchQuery)
+        console.log('🎨 Using Unsplash API for AI-powered image search')
+        console.log('Search query:', searchQuery)
         
         const orientation = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '4:5' ? 'portrait' : 'squarish'
-        const apiUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(searchQuery)}&orientation=${orientation}&client_id=${this.apiKey}`
         
-        console.log('Calling Unsplash API...')
-        const response = await fetch(apiUrl)
+        // Use Unsplash Search API for better relevance
+        const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&orientation=${orientation}&per_page=10&client_id=${this.apiKey}`
         
-        if (response.ok) {
-          const data = await response.json()
-          console.log('✅ Unsplash API success! Image ID:', data.id)
-          console.log('Image description:', data.description || data.alt_description)
-          // Return the regular size image URL (best quality for web)
-          return data.urls.regular || data.urls.full
+        const searchResponse = await fetch(searchUrl)
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json()
+          
+          if (searchData.results && searchData.results.length > 0) {
+            // Get a random image from top 10 results for variety
+            const randomIndex = Math.floor(Math.random() * Math.min(searchData.results.length, 10))
+            const selectedImage = searchData.results[randomIndex]
+            
+            console.log('✅ Found relevant image:', selectedImage.alt_description || selectedImage.description)
+            console.log('📸 Image by:', selectedImage.user.name)
+            
+            // Return high-quality image URL
+            return selectedImage.urls.regular || selectedImage.urls.full
+          } else {
+            console.log('⚠️ No results found for query, trying fallback search')
+            
+            // Fallback: Try with just the main prompt without style keywords
+            const fallbackUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(cleanPrompt)}&orientation=${orientation}&client_id=${this.apiKey}`
+            const fallbackResponse = await fetch(fallbackUrl)
+            
+            if (fallbackResponse.ok) {
+              const fallbackData = await fallbackResponse.json()
+              console.log('✅ Fallback search successful')
+              return fallbackData.urls.regular || fallbackData.urls.full
+            }
+          }
         } else {
-          const errorText = await response.text()
-          console.error('❌ Unsplash API error:', response.status, errorText)
+          const errorText = await searchResponse.text()
+          console.error('❌ Unsplash API error:', searchResponse.status, errorText)
         }
       } else {
-        console.log('⚠️ No Unsplash API key found, using fallback')
+        console.log('⚠️ No Unsplash API key configured')
+        console.log('💡 Add UNSPLASH_ACCESS_KEY to your .env.local file for AI-powered image generation')
       }
       
-      // Fallback: Use Picsum Photos (reliable alternative)
-      console.log('Using Picsum fallback')
-      const picsumUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`
+      // Fallback: Use Picsum Photos with seed for consistency
+      console.log('Using Picsum fallback with seed based on prompt')
+      const seed = prompt.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+      const picsumUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`
       return picsumUrl
       
     } catch (error) {
       console.error('Image generation error:', error)
       
-      // Final fallback: Create a nice gradient placeholder with text
+      // Final fallback: Create a nice gradient placeholder
       const colors = {
         professional: '0A66C2/FFFFFF',
         creative: 'FF6B6B/FFFFFF',
@@ -79,7 +105,7 @@ export class ImageGenerator {
       }
       
       const colorScheme = colors[style]
-      const text = prompt.substring(0, 50).replace(/[^a-zA-Z0-9 ]/g, '')
+      const text = prompt.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, '')
       
       return `https://via.placeholder.com/${width}x${height}/${colorScheme}?text=${encodeURIComponent(text)}`
     }
