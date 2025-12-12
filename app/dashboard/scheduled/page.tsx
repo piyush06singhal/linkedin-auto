@@ -61,6 +61,33 @@ export default function ScheduledPage() {
     fetchScheduledPosts()
   }
 
+  const handlePublishNow = async (post: any) => {
+    if (!linkedInConnected) {
+      alert('Please connect your LinkedIn account in Settings first.')
+      return
+    }
+
+    if (!confirm('Publish this post to LinkedIn now?')) return
+
+    try {
+      // For now, just mark as published since LinkedIn OAuth isn't set up
+      // In production, this would call the LinkedIn API
+      await supabase
+        .from('posts')
+        .update({ 
+          status: 'published',
+          published_at: new Date().toISOString()
+        })
+        .eq('id', post.id)
+
+      alert('Post marked as published! (LinkedIn OAuth integration coming soon)')
+      fetchScheduledPosts()
+    } catch (error) {
+      console.error('Error publishing post:', error)
+      alert('Failed to publish post')
+    }
+  }
+
   const filteredPosts = scheduledPosts.filter(post =>
     post.content.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -219,8 +246,8 @@ export default function ScheduledPage() {
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 mb-1">LinkedIn Not Connected</h3>
                   <p className="text-gray-700 text-sm mb-3">
-                    Your scheduled posts won't be published automatically because LinkedIn is not connected. 
-                    Connect your LinkedIn account in Settings to enable automatic posting.
+                    Connect your LinkedIn account in Settings to enable publishing. 
+                    Once connected, you can use the "Publish Now" button to post to LinkedIn.
                   </p>
                   <Link
                     href="/dashboard/settings"
@@ -314,7 +341,14 @@ export default function ScheduledPage() {
                         <span>{post.content.split(/\s+/).length} words</span>
                       </div>
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex gap-2">
+                      <button
+                        onClick={() => handlePublishNow(post)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
+                        title="Publish to LinkedIn now"
+                      >
+                        Publish Now
+                      </button>
                       <button
                         onClick={() => handleCancel(post.id)}
                         className="px-4 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition text-sm font-medium"

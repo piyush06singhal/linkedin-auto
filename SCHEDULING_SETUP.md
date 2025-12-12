@@ -7,9 +7,11 @@ This application includes an automatic post scheduling system that publishes you
 ## How It Works
 
 1. **User schedules a post** - Posts are saved with `status='scheduled'` and a `scheduled_for` timestamp
-2. **Cron job runs every 5 minutes** - Checks for posts that should be published
-3. **Posts are published to LinkedIn** - Using the LinkedIn API with the user's access token
-4. **Status is updated** - Post status changes to `published` or `failed`
+2. **User clicks "Publish Now"** - Manually publishes the post when ready
+3. **Posts are published to LinkedIn** - Using the LinkedIn API with the user's access token (when OAuth is set up)
+4. **Status is updated** - Post status changes to `published`
+
+**Note**: Automatic cron-based publishing has been removed to simplify deployment. Users manually publish scheduled posts using the "Publish Now" button.
 
 ## Setup Requirements
 
@@ -65,36 +67,19 @@ To enable automatic posting, you need to:
    - This stores their access token in the database
    - The cron job uses this token to post on their behalf
 
-### 4. Vercel Cron Job
+### 4. Manual Publishing
 
-The cron job is configured in `vercel.json`:
+Instead of automatic cron jobs, users manually publish scheduled posts:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/publish-posts",
-      "schedule": "*/5 * * * *"
-    }
-  ]
-}
-```
+1. Go to the Scheduled page
+2. Click "Publish Now" on any scheduled post
+3. The post is published to LinkedIn (when OAuth is configured)
 
-This runs every 5 minutes and checks for posts to publish.
-
-**Note**: Vercel Cron Jobs are only available on Pro plans. For free plans, you can:
-- Use an external cron service (like cron-job.org)
-- Call the endpoint manually: `GET https://your-domain.com/api/cron/publish-posts`
-- Use GitHub Actions to trigger it
-
-### 5. Testing the Cron Job
-
-You can manually trigger the cron job:
-
-```bash
-curl -X GET https://your-domain.com/api/cron/publish-posts \
-  -H "Authorization: Bearer YOUR_CRON_SECRET"
-```
+This approach:
+- ✅ Works on all Vercel plans (no Pro plan needed)
+- ✅ Gives users full control over when posts go live
+- ✅ Avoids deployment complexity with cron jobs
+- ✅ No need for CRON_SECRET or external services
 
 ## Current Status
 
@@ -114,46 +99,33 @@ Until then:
 
 ```
 draft → scheduled → published ✅
-                 → failed ❌
 ```
 
 - **draft**: Post is being worked on
-- **scheduled**: Post is queued for publishing
-- **published**: Post was successfully published to LinkedIn
-- **failed**: Post failed to publish (error message stored)
+- **scheduled**: Post is queued and ready to publish
+- **published**: Post was published to LinkedIn (or marked as published)
 
 ## Troubleshooting
 
 ### Posts not publishing?
 
 1. Check if LinkedIn is connected (Settings page)
-2. Verify cron job is running (check Vercel logs)
-3. Check for failed posts in the database
-4. Verify environment variables are set
+2. Verify environment variables are set
+3. Check browser console for errors
 
-### How to check failed posts?
+### How to check published posts?
 
 ```sql
 SELECT * FROM posts 
-WHERE status = 'failed' 
-ORDER BY failed_at DESC;
-```
-
-### Manual retry for failed posts
-
-```sql
-UPDATE posts 
-SET status = 'scheduled', 
-    error_message = NULL, 
-    failed_at = NULL 
-WHERE id = 'post_id_here';
+WHERE status = 'published' 
+ORDER BY published_at DESC;
 ```
 
 ## Future Enhancements
 
 - [ ] Implement LinkedIn OAuth flow
-- [ ] Add retry logic for failed posts
+- [ ] Add actual LinkedIn API posting
 - [ ] Show publishing history in UI
-- [ ] Add email notifications for failed posts
 - [ ] Support for image attachments
 - [ ] Bulk scheduling interface
+- [ ] Optional: Add back automatic cron-based publishing (for Pro plans)
