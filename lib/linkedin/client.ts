@@ -106,15 +106,31 @@ export class LinkedInClient {
 
 // OAuth helper functions
 export function getLinkedInAuthUrl(state: string): string {
+  const clientId = process.env.LINKEDIN_CLIENT_ID
+  const redirectUri = process.env.LINKEDIN_REDIRECT_URI
+  
+  console.log('🔑 LinkedIn OAuth Config:', {
+    clientId,
+    redirectUri,
+    state
+  })
+  
+  if (!clientId || !redirectUri) {
+    throw new Error('LinkedIn OAuth not configured. Missing CLIENT_ID or REDIRECT_URI')
+  }
+  
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: process.env.LINKEDIN_CLIENT_ID!,
-    redirect_uri: process.env.LINKEDIN_REDIRECT_URI!,
+    client_id: clientId,
+    redirect_uri: redirectUri,
     state: state,
     scope: 'openid profile email w_member_social',
   })
 
-  return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`
+  const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`
+  console.log('🔗 Generated OAuth URL:', authUrl)
+  
+  return authUrl
 }
 
 export async function exchangeCodeForToken(code: string): Promise<{
