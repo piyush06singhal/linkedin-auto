@@ -7,6 +7,97 @@ import { createGeminiClient } from '@/lib/ai/gemini-client'
 const lastRequestTime = new Map<string, number>()
 const MIN_REQUEST_INTERVAL = 5000 // 5 seconds between requests to avoid quota issues
 
+// Fallback ideas generator
+function generateFallbackIdeas(count: number, category?: string) {
+  const allIdeas = [
+    {
+      title: "Share your biggest career mistake and the lesson you learned",
+      description: "People love authentic stories. Share a mistake you made and what it taught you about growth.",
+      category: "Personal Story",
+      difficulty: "Easy",
+      engagement: "High",
+      trending: true
+    },
+    {
+      title: "5 tools that transformed your productivity this year",
+      description: "Share the software, apps, or tools that have made the biggest impact on how you work.",
+      category: "Tips & Tricks",
+      difficulty: "Easy",
+      engagement: "High",
+      trending: false
+    },
+    {
+      title: "Your unpopular opinion about your industry",
+      description: "Share a contrarian view that challenges common assumptions in your field.",
+      category: "Thought Leadership",
+      difficulty: "Hard",
+      engagement: "Very High",
+      trending: true
+    },
+    {
+      title: "Behind the scenes: A day in your professional life",
+      description: "Give people a behind-the-scenes look at what you actually do all day.",
+      category: "Personal Story",
+      difficulty: "Easy",
+      engagement: "Medium",
+      trending: false
+    },
+    {
+      title: "Skills that will be essential in 2025",
+      description: "Predict and explain the skills professionals will need to thrive in the near future.",
+      category: "Career Advice",
+      difficulty: "Medium",
+      engagement: "High",
+      trending: true
+    },
+    {
+      title: "How AI is reshaping your industry right now",
+      description: "Discuss the real impact of AI tools on your field with specific examples.",
+      category: "Industry News",
+      difficulty: "Medium",
+      engagement: "Very High",
+      trending: true
+    },
+    {
+      title: "The best career advice you ever received",
+      description: "Share wisdom that changed your professional trajectory and why it matters.",
+      category: "Career Advice",
+      difficulty: "Easy",
+      engagement: "High",
+      trending: false
+    },
+    {
+      title: "3 myths about your profession that need to die",
+      description: "Debunk common misconceptions about your field with facts and experience.",
+      category: "Thought Leadership",
+      difficulty: "Medium",
+      engagement: "High",
+      trending: false
+    },
+    {
+      title: "From failure to success: Your comeback story",
+      description: "Share a time you failed spectacularly and how you bounced back stronger.",
+      category: "Personal Story",
+      difficulty: "Medium",
+      engagement: "Very High",
+      trending: true
+    }
+  ]
+
+  // Filter by category if specified
+  let filteredIdeas = category && category !== 'All' 
+    ? allIdeas.filter(idea => idea.category === category)
+    : allIdeas
+
+  // If not enough ideas after filtering, use all ideas
+  if (filteredIdeas.length < count) {
+    filteredIdeas = allIdeas
+  }
+
+  // Return requested number of ideas
+  return filteredIdeas.slice(0, count)
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -43,36 +134,25 @@ export async function POST(request: Request) {
 
     const categoryFilter = category && category !== 'All' ? ` in the "${category}" category` : ''
     
-    const prompt = `You are a LinkedIn content strategist. Generate ${count} unique and engaging LinkedIn post ideas${categoryFilter}.
+    const prompt = `Generate ${count} LinkedIn post ideas${categoryFilter}. Return ONLY valid JSON array, no other text.
 
-For each idea, provide:
-1. A catchy title (10-15 words)
-2. A brief description explaining the idea (20-30 words)
-3. Category (one of: Thought Leadership, Personal Story, Industry News, Tips & Tricks, Career Advice, Trending Topics)
-4. Difficulty (Easy, Medium, or Hard)
-5. Expected Engagement (Medium, High, or Very High)
-6. Whether it's trending (true/false)
-
-Return ONLY a valid JSON array with this exact structure (no additional text):
+Format (MUST be valid JSON):
 [
   {
-    "title": "string",
-    "description": "string",
-    "category": "string",
-    "difficulty": "string",
-    "engagement": "string",
-    "trending": boolean
+    "title": "Post title here",
+    "description": "Brief description",
+    "category": "Thought Leadership",
+    "difficulty": "Easy",
+    "engagement": "High",
+    "trending": true
   }
 ]
 
-Make the ideas:
-- Specific and actionable
-- Relevant to current LinkedIn trends
-- Diverse in topics and approaches
-- Authentic and relatable
-- Designed to drive engagement
+Categories: Thought Leadership, Personal Story, Industry News, Tips & Tricks, Career Advice, Trending Topics
+Difficulty: Easy, Medium, Hard
+Engagement: Medium, High, Very High
 
-Generate the JSON array now:`
+Return ONLY the JSON array, nothing else:`
 
     const response = await gemini.generatePost({
       topic: prompt,
@@ -121,7 +201,9 @@ Generate the JSON array now:`
       console.error('❌ Failed to parse AI response:', parseError)
       console.error('Raw response:', response)
       
-      throw new Error(`Failed to parse AI response: ${parseError.message}. Please try again.`)
+      // Use fallback ideas if parsing fails
+      console.log('⚠️ Using fallback ideas due to parsing error')
+      ideas = generateFallbackIdeas(count, category)
     }
 
     // Add unique IDs to each idea
