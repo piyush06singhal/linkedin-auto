@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { LinkedInClient } from '@/lib/linkedin/client'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // This endpoint should be called by a cron job (e.g., Vercel Cron or external service)
 // It checks for posts that are scheduled to be published and posts them to LinkedIn
 
@@ -23,7 +27,7 @@ export async function GET(request: Request) {
     const now = new Date().toISOString()
     const { data: postsToPublish, error: fetchError } = await supabase
       .from('posts')
-      .select('*, profiles!inner(linkedin_access_token, linkedin_user_id)')
+      .select('*, users!inner(linkedin_access_token, linkedin_user_id)')
       .eq('status', 'scheduled')
       .lte('scheduled_for', now)
       .limit(50) // Process max 50 posts per run
@@ -52,10 +56,10 @@ export async function GET(request: Request) {
     // Publish each post
     for (const post of postsToPublish) {
       try {
-        const profile = post.profiles
+        const user = post.users
 
         // Check if user has LinkedIn connected
-        if (!profile.linkedin_access_token || !profile.linkedin_user_id) {
+        if (!user.linkedin_access_token || !user.linkedin_user_id) {
           console.log(`⚠️ Post ${post.id}: User hasn't connected LinkedIn`)
           
           // Mark as failed
@@ -76,13 +80,13 @@ export async function GET(request: Request) {
         }
 
         // Create LinkedIn client
-        const linkedIn = new LinkedInClient(profile.linkedin_access_token)
+        const linkedIn = new LinkedInClient(user.linkedin_access_token)
 
         // Publish to LinkedIn
         console.log(`📤 Publishing post ${post.id} to LinkedIn...`)
         const linkedInPost = await linkedIn.createPost(
           post.content,
-          profile.linkedin_user_id
+          user.linkedin_user_id
         )
 
         console.log(`✅ Post ${post.id} published successfully`)
