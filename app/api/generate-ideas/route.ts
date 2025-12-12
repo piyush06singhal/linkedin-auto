@@ -79,33 +79,8 @@ Generate the JSON array now:`
       console.error('❌ Failed to parse AI response:', parseError)
       console.error('Raw response:', response)
       
-      // Fallback: Return some default ideas
-      ideas = [
-        {
-          title: "Share your biggest career mistake and the lesson you learned",
-          description: "People love authentic stories. Share a mistake you made and what it taught you about growth.",
-          category: "Personal Story",
-          difficulty: "Easy",
-          engagement: "High",
-          trending: true
-        },
-        {
-          title: "5 tools that transformed your productivity this year",
-          description: "Share the software, apps, or tools that have made the biggest impact on how you work.",
-          category: "Tips & Tricks",
-          difficulty: "Easy",
-          engagement: "High",
-          trending: false
-        },
-        {
-          title: "Your unpopular opinion about your industry",
-          description: "Share a contrarian view that challenges common assumptions in your field.",
-          category: "Thought Leadership",
-          difficulty: "Hard",
-          engagement: "Very High",
-          trending: true
-        }
-      ]
+      // Don't use fallback - throw error so user knows AI failed
+      throw new Error('Failed to parse AI response. The AI returned invalid data. Please try again.')
     }
 
     // Add unique IDs to each idea

@@ -18,74 +18,11 @@ interface ContentIdea {
 export default function ContentIdeasPage() {
   const router = useRouter()
   const [ideas, setIdeas] = useState<ContentIdea[]>([])
-  const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const categories = ['All', 'Thought Leadership', 'Personal Story', 'Industry News', 'Tips & Tricks', 'Career Advice', 'Trending Topics']
-
-  const mockIdeas: ContentIdea[] = [
-    {
-      id: '1',
-      title: 'Share your biggest career mistake and lesson learned',
-      description: 'People love authentic stories. Share a mistake you made early in your career and what it taught you.',
-      category: 'Personal Story',
-      difficulty: 'Easy',
-      engagement: 'High',
-      trending: true
-    },
-    {
-      id: '2',
-      title: 'Break down a complex industry trend in simple terms',
-      description: 'Take a trending topic in your industry and explain it like you\'re talking to a friend.',
-      category: 'Industry News',
-      difficulty: 'Medium',
-      engagement: 'High',
-      trending: true
-    },
-    {
-      id: '3',
-      title: '5 tools that changed how you work',
-      description: 'Share the software, apps, or tools that have made the biggest impact on your productivity.',
-      category: 'Tips & Tricks',
-      difficulty: 'Easy',
-      engagement: 'Medium',
-      trending: false
-    },
-    {
-      id: '4',
-      title: 'Your unpopular opinion about your industry',
-      description: 'Share a contrarian view that challenges common assumptions in your field.',
-      category: 'Thought Leadership',
-      difficulty: 'Hard',
-      engagement: 'Very High',
-      trending: true
-    },
-    {
-      id: '5',
-      title: 'Day in the life of your role',
-      description: 'Give people a behind-the-scenes look at what you actually do all day.',
-      category: 'Personal Story',
-      difficulty: 'Easy',
-      engagement: 'Medium',
-      trending: false
-    },
-    {
-      id: '6',
-      title: 'Skills that will be essential in 2026',
-      description: 'Predict and explain the skills professionals will need to thrive in the near future.',
-      category: 'Career Advice',
-      difficulty: 'Medium',
-      engagement: 'High',
-      trending: true
-    }
-  ]
-
-  useEffect(() => {
-    // Load initial ideas on mount
-    handleGenerateMore()
-  }, [])
 
   const handleGenerateMore = async () => {
     setGenerating(true)
@@ -98,7 +35,7 @@ export default function ContentIdeasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category: selectedCategory,
-          count: 6
+          count: 9 // Generate 9 ideas at a time (unlimited total)
         }),
       })
 
@@ -110,7 +47,7 @@ export default function ContentIdeasPage() {
 
       console.log('✅ Received', data.ideas.length, 'ideas from AI')
       
-      // Add new ideas to existing ones
+      // Add new ideas to existing ones (unlimited)
       setIdeas(prevIdeas => [...prevIdeas, ...data.ideas])
     } catch (error: any) {
       console.error('❌ Error generating ideas:', error)
