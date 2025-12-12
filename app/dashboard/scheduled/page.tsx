@@ -10,10 +10,27 @@ export default function ScheduledPage() {
   const [scheduledPosts, setScheduledPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [linkedInConnected, setLinkedInConnected] = useState(false)
 
   useEffect(() => {
     fetchScheduledPosts()
+    checkLinkedInConnection()
   }, [])
+
+  const checkLinkedInConnection = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('linkedin_access_token')
+      .eq('id', user.id)
+      .single()
+
+    if (userData) {
+      setLinkedInConnected(!!userData.linkedin_access_token)
+    }
+  }
 
   const fetchScheduledPosts = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -191,6 +208,34 @@ export default function ScheduledPage() {
               </div>
             </div>
           </div>
+
+          {/* LinkedIn Warning */}
+          {!linkedInConnected && scheduledPosts.length > 0 && (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 mb-1">LinkedIn Not Connected</h3>
+                  <p className="text-gray-700 text-sm mb-3">
+                    Your scheduled posts won't be published automatically because LinkedIn is not connected. 
+                    Connect your LinkedIn account in Settings to enable automatic posting.
+                  </p>
+                  <Link
+                    href="/dashboard/settings"
+                    className="inline-flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition text-sm font-medium"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Go to Settings</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Search */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
