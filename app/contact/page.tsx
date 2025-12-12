@@ -75,9 +75,11 @@ export default function ContactPage() {
             <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="text-primary font-medium">Contact</Link>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/login" className="text-primary hover:underline font-medium">Log in</Link>
-            <Link href="/signup" className="bg-primary text-white px-6 py-2 rounded-full hover:bg-secondary transition">
+          <div className="flex items-center space-x-4">
+            <Link href="/login" className="border-2 border-primary text-primary px-6 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-300 font-medium">
+              Log in
+            </Link>
+            <Link href="/signup" className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300 font-medium">
               Get Started Free
             </Link>
           </div>
@@ -212,55 +214,46 @@ export default function ContactPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-4 transform hover:scale-105 transition-all duration-300">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 animate-pulse">
                     <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
                     <h3 className="font-bold text-lg mb-1">Email Us</h3>
-                    <p className="text-gray-600">support@linkedai.com</p>
+                    <a href="mailto:piyush.singhal.2004@gmail.com" className="text-primary hover:underline font-medium">
+                      piyush.singhal.2004@gmail.com
+                    </a>
                     <p className="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 transform hover:scale-105 transition-all duration-300">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Live Chat</h3>
-                    <p className="text-gray-600">Available Mon-Fri, 9am-6pm EST</p>
-                    <button className="text-primary font-medium mt-2 hover:underline">Start Chat →</button>
+                    <h3 className="font-bold text-lg mb-1">Mobile</h3>
+                    <a href="tel:+919694984312" className="text-primary hover:underline font-medium">
+                      +91 96949 84312
+                    </a>
+                    <p className="text-sm text-gray-500 mt-1">Available for urgent inquiries</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 transform hover:scale-105 transition-all duration-300">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Office</h3>
-                    <p className="text-gray-600">123 Innovation Drive<br />San Francisco, CA 94105</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Phone</h3>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
-                    <p className="text-sm text-gray-500 mt-1">Mon-Fri, 9am-6pm EST</p>
+                    <h3 className="font-bold text-lg mb-1">Quick Response</h3>
+                    <p className="text-gray-600">Get answers to your questions fast</p>
+                    <p className="text-sm text-gray-500 mt-1">Typically respond within 2-4 hours</p>
                   </div>
                 </div>
               </div>

@@ -37,7 +37,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ## 🎯 Complete Features
 
 ### Pages (16 Total)
-1. Landing Page - Features, Pricing, About, Blog, Contact
+1. Landing Page - Features, About, Blog, Contact
 2. Login/Signup - Email + Google + LinkedIn OAuth
 3. Dashboard - Stats, analytics, recent activity
 4. Generate - AI content creation

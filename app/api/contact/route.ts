@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         
         await resend.emails.send({
           from: 'LinkedAI <onboarding@resend.dev>',
-          to: ['support@linkedai.com'],
+          to: ['piyush.singhal.2004@gmail.com'],
           reply_to: email,
           subject: `Contact Form: ${subject}`,
           html: `

@@ -19,9 +19,11 @@ export default function FeaturesPage() {
             <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="hover:text-primary">Contact</Link>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/login" className="text-primary hover:underline font-medium">Log in</Link>
-            <Link href="/signup" className="bg-primary text-white px-6 py-2 rounded-full hover:bg-secondary transition">
+          <div className="flex items-center space-x-4">
+            <Link href="/login" className="border-2 border-primary text-primary px-6 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-300 font-medium">
+              Log in
+            </Link>
+            <Link href="/signup" className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300 font-medium">
               Get Started Free
             </Link>
           </div>

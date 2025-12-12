@@ -1,7 +1,62 @@
 import Link from 'next/link'
 import Footer from '@/components/Footer'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-export default function Home() {
+async function getGlobalStats() {
+  const supabase = createServerComponentClient({ cookies })
+  
+  try {
+    // Get total posts generated
+    const { count: postsCount } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+    
+    // Get average engagement rate
+    const { data: engagementData } = await supabase
+      .from('posts')
+      .select('engagement_rate')
+      .not('engagement_rate', 'is', null)
+    
+    const avgEngagement = engagementData && engagementData.length > 0
+      ? Math.round(engagementData.reduce((sum, post) => sum + (post.engagement_rate || 0), 0) / engagementData.length)
+      : 0
+    
+    // Get scheduled posts count
+    const { count: scheduledCount } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'scheduled')
+    
+    // Get total reach
+    const { data: reachData } = await supabase
+      .from('posts')
+      .select('reach')
+      .not('reach', 'is', null)
+    
+    const totalReach = reachData && reachData.length > 0
+      ? reachData.reduce((sum, post) => sum + (post.reach || 0), 0)
+      : 0
+    
+    return {
+      postsGenerated: postsCount || 0,
+      avgEngagement: avgEngagement || 0,
+      scheduledPosts: scheduledCount || 0,
+      totalReach: totalReach || 0
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    return {
+      postsGenerated: 0,
+      avgEngagement: 0,
+      scheduledPosts: 0,
+      totalReach: 0
+    }
+  }
+}
+
+export default async function Home() {
+  const stats = await getGlobalStats()
   return (
     <main className="min-h-screen bg-white">
       {/* Navigation */}
@@ -19,9 +74,11 @@ export default function Home() {
             <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="hover:text-primary">Contact</Link>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/login" className="text-primary hover:underline font-medium">Log in</Link>
-            <Link href="/signup" className="bg-primary text-white px-6 py-2 rounded-full hover:bg-secondary transition">
+          <div className="flex items-center space-x-4">
+            <Link href="/login" className="border-2 border-primary text-primary px-6 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-300 font-medium">
+              Log in
+            </Link>
+            <Link href="/signup" className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300 font-medium">
               Get Started Free
             </Link>
           </div>
@@ -29,9 +86,10 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 via-purple-50 to-white py-20 animate-fade-in overflow-hidden relative">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{animationDelay: '2s'}}></div>
+      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-20 overflow-hidden relative">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-40 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
         
         <div className="container mx-auto px-6 text-center relative z-10">
           <div className="inline-block bg-gradient-to-r from-primary to-secondary text-white px-6 py-2 rounded-full text-sm mb-6 font-medium animate-scale-in shadow-lg">
@@ -49,9 +107,9 @@ export default function Home() {
             <Link href="/signup" className="bg-gradient-to-r from-primary to-secondary text-white px-10 py-5 rounded-full text-lg font-medium hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
               Start Free - No Credit Card →
             </Link>
-            <button className="border-2 border-primary text-primary px-10 py-5 rounded-full text-lg font-medium hover:bg-primary hover:text-white transition-all duration-300 transform hover:scale-105">
+            <a href="#features" className="border-2 border-primary text-primary px-10 py-5 rounded-full text-lg font-medium hover:bg-primary hover:text-white transition-all duration-300 transform hover:scale-105">
               ▶ See How It Works
-            </button>
+            </a>
           </div>
           <p className="text-sm text-gray-500 mb-12 animate-slide-up">14-day free trial • Cancel anytime • No credit card required</p>
           
@@ -65,21 +123,21 @@ export default function Home() {
               </div>
               <div className="p-8 bg-gradient-to-br from-blue-50 to-purple-50">
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <div className="text-3xl font-bold text-primary">1,247</div>
+                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
+                    <div className="text-3xl font-bold text-primary">{stats.postsGenerated.toLocaleString()}</div>
                     <div className="text-sm text-gray-600">Posts Generated</div>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <div className="text-3xl font-bold text-green-600">89%</div>
-                    <div className="text-sm text-gray-600">Engagement</div>
+                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
+                    <div className="text-3xl font-bold text-green-600">{stats.avgEngagement}%</div>
+                    <div className="text-sm text-gray-600">Avg Engagement</div>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <div className="text-3xl font-bold text-purple-600">14</div>
+                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
+                    <div className="text-3xl font-bold text-purple-600">{stats.scheduledPosts}</div>
                     <div className="text-sm text-gray-600">Scheduled</div>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow">
-                    <div className="text-3xl font-bold text-orange-600">+156%</div>
-                    <div className="text-sm text-gray-600">Reach</div>
+                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
+                    <div className="text-3xl font-bold text-orange-600">{stats.totalReach.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Total Reach</div>
                   </div>
                 </div>
               </div>
@@ -96,64 +154,64 @@ export default function Home() {
             <p className="text-xl text-gray-600">Everything you need to dominate LinkedIn</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-blue-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">AI Content Generation</h3>
-              <p className="text-gray-600">Create engaging posts in seconds with our advanced AI that understands your voice and industry.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">AI Content Generation</h3>
+              <p className="text-gray-600 leading-relaxed">Create engaging posts in seconds with our advanced AI that understands your voice and industry.</p>
             </div>
 
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-green-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">Smart Scheduling</h3>
-              <p className="text-gray-600">Schedule posts at optimal times for maximum engagement. Set it and forget it.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">Smart Scheduling</h3>
+              <p className="text-gray-600 leading-relaxed">Schedule posts at optimal times for maximum engagement. Set it and forget it.</p>
             </div>
 
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-purple-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">Analytics & Insights</h3>
-              <p className="text-gray-600">Track performance, understand what works, and optimize your content strategy.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">Analytics & Insights</h3>
+              <p className="text-gray-600 leading-relaxed">Track performance, understand what works, and optimize your content strategy.</p>
             </div>
 
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-orange-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">Template Library</h3>
-              <p className="text-gray-600">Save and reuse your best-performing content with our template system.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">Template Library</h3>
+              <p className="text-gray-600 leading-relaxed">Save and reuse your best-performing content with our template system.</p>
             </div>
 
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-rose-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">Draft Management</h3>
-              <p className="text-gray-600">Save, edit, and organize your drafts before publishing.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">Draft Management</h3>
+              <p className="text-gray-600 leading-relaxed">Save, edit, and organize your drafts before publishing.</p>
             </div>
 
-            <div className="p-8 border border-gray-200 rounded-2xl hover:shadow-lg transition">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="group p-8 border-2 border-gray-200 rounded-2xl hover:border-indigo-500 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">Auto-Publishing</h3>
-              <p className="text-gray-600">Connect your LinkedIn and let us handle the posting automatically.</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">Auto-Publishing</h3>
+              <p className="text-gray-600 leading-relaxed">Connect your LinkedIn and let us handle the posting automatically.</p>
             </div>
           </div>
         </div>
