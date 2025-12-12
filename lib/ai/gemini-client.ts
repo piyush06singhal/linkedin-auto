@@ -329,9 +329,13 @@ Write the LinkedIn post now (ONLY the post content, no explanations):`
 // Helper function to create client
 export function createGeminiClient(): GeminiClient {
   // Get API key from environment (server-side only)
-  const apiKey = (globalThis as any).process?.env?.GOOGLE_AI_API_KEY
+  const apiKey = process.env.GOOGLE_AI_API_KEY
+  
+  console.log('🤖 Creating Gemini Client')
+  console.log('🔑 API Key Status:', apiKey ? `Present (${apiKey.substring(0, 10)}...)` : '❌ MISSING')
   
   if (!apiKey) {
+    console.error('❌ GOOGLE_AI_API_KEY is not configured in environment variables!')
     throw new Error('GOOGLE_AI_API_KEY is not configured')
   }
 

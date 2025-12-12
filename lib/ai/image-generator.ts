@@ -138,8 +138,17 @@ export class ImageGenerator {
 }
 
 export function createImageGenerator(): ImageGenerator {
-  // Use Unsplash Access Key for official API
-  const apiKey = (globalThis as any).process?.env?.UNSPLASH_ACCESS_KEY || ''
-  console.log('Creating ImageGenerator with API key:', apiKey ? 'Key present' : 'No key')
+  // Use Unsplash Access Key for official API (server-side only)
+  const apiKey = process.env.UNSPLASH_ACCESS_KEY || ''
+  
+  console.log('🖼️ Creating ImageGenerator')
+  console.log('🔑 API Key Status:', apiKey ? `Present (${apiKey.substring(0, 10)}...)` : '❌ MISSING')
+  console.log('🔑 Full Key Length:', apiKey.length)
+  
+  if (!apiKey) {
+    console.error('❌ UNSPLASH_ACCESS_KEY is not set in environment variables!')
+    console.error('💡 Make sure to add UNSPLASH_ACCESS_KEY to your .env.local file')
+  }
+  
   return new ImageGenerator(apiKey)
 }

@@ -19,11 +19,23 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { topic, tone, length, includeHashtags, includeEmojis, action } = body
 
+    console.log('\n🔵 API ROUTE - Generate Post Request Received')
+    console.log('👤 User ID:', user.id)
+    console.log('📝 Action:', action)
+    console.log('🎯 Topic Received:', topic)
+    console.log('🎨 Tone:', tone)
+    console.log('📏 Length:', length)
+    console.log('# Include Hashtags:', includeHashtags)
+    console.log('😊 Include Emojis:', includeEmojis)
+
     // Validate API key
     if (!process.env.GOOGLE_AI_API_KEY) {
-      console.error('GOOGLE_AI_API_KEY not configured')
+      console.error('❌ GOOGLE_AI_API_KEY not configured')
       return NextResponse.json({ error: 'AI service not configured. Please contact support.' }, { status: 500 })
     }
+
+    console.log('✅ API Key is configured')
+    console.log('🤖 Creating Gemini client...')
 
     // Create Gemini client
     const gemini = createGeminiClient()
@@ -33,6 +45,7 @@ export async function POST(request: Request) {
     switch (action) {
       case 'generate':
         // Generate a single post
+        console.log('🚀 Calling Gemini API to generate post...')
         result = await gemini.generatePost({
           topic,
           tone,
@@ -40,6 +53,8 @@ export async function POST(request: Request) {
           includeHashtags,
           includeEmojis,
         })
+        console.log('✅ Post generated successfully!')
+        console.log('📊 Result length:', result.length, 'characters')
         break
 
       case 'variations':

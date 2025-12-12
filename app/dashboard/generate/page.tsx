@@ -44,29 +44,54 @@ export default function GeneratePage() {
     try {
       const topic = description || `${mainTopic}${niche ? ` - ${niche}` : ''}${targetAudience ? ` for ${targetAudience}` : ''}`
       
+      console.log('🎯 User Input - Description:', description)
+      console.log('🎯 User Input - Main Topic:', mainTopic)
+      console.log('🎯 User Input - Niche:', niche)
+      console.log('🎯 User Input - Target Audience:', targetAudience)
+      console.log('📝 Final Topic Being Sent to AI:', topic)
+      console.log('🎨 Tone:', tone)
+      console.log('📊 Number of Posts:', numberOfPosts)
+      
+      if (!topic || topic.trim().length === 0) {
+        throw new Error('Topic is empty. Please provide a description or main topic.')
+      }
+      
       const posts: string[] = []
       
       // Generate multiple posts based on numberOfPosts
       for (let i = 0; i < numberOfPosts; i++) {
+        console.log(`\n🚀 Generating post ${i + 1}/${numberOfPosts}...`)
+        
+        const requestBody = {
+          action: 'generate',
+          topic,
+          tone,
+          length: 'medium',
+          includeHashtags: true,
+          includeEmojis: tone === 'casual' || tone === 'inspirational',
+        }
+        
+        console.log('📤 Request Body:', JSON.stringify(requestBody, null, 2))
+        
         const response = await fetch('/api/generate-post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate',
-            topic,
-            tone,
-            length: 'medium',
-            includeHashtags: true,
-            includeEmojis: tone === 'casual' || tone === 'inspirational',
-          }),
+          body: JSON.stringify(requestBody),
         })
 
         const data = await response.json()
+        
+        console.log('📥 API Response Status:', response.status)
+        console.log('📥 API Response Data:', data)
 
         if (!response.ok) {
+          console.error('❌ API Error:', data.error)
           throw new Error(data.error || 'Failed to generate')
         }
 
+        console.log('✅ Post generated successfully!')
+        console.log('📝 Generated content preview:', data.result.substring(0, 100) + '...')
+        
         posts.push(data.result)
         
         // Update UI progressively as posts are generated
