@@ -3,23 +3,38 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 
-// This component runs in the background and automatically publishes scheduled posts
-// It checks every 2 minutes for posts that should be published
-
 export default function AutoPublishService() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const isCheckingRef = useRef(false)
 
   useEffect(() => {
-    // Check if user is authenticated
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return false
-      return true
+      return !!user
+    }
+
+    const showNotification = (title: string, body: string) => {
+      // Try browser notification first
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: 'linkedin-auto-publish',
+          requireInteraction: true
+        })
+        
+        notification.onclick = () => {
+          window.focus()
+          notification.close()
+        }
+      }
+      
+      // Also show alert as fallback
+      alert(`${title}\n\n${body}`)
     }
 
     const autoPublish = async () => {
-      // Prevent multiple simultaneous checks
       if (isCheckingRef.current) return
       
       const isAuthenticated = await checkAuth()
@@ -39,14 +54,10 @@ export default function AutoPublishService() {
 
         if (data.published > 0) {
           console.log(`✅ Auto-published ${data.published} post(s)`)
-          
-          // Show notification
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Posts Published!', {
-              body: `${data.published} scheduled post(s) have been published to LinkedIn`,
-              icon: '/favicon.ico'
-            })
-          }
+          showNotification(
+            '🎉 Posts Published!',
+            `${data.published} scheduled post(s) have been published to LinkedIn`
+          )
         }
 
         if (data.failed > 0) {
@@ -60,25 +71,22 @@ export default function AutoPublishService() {
       }
     }
 
-    // Run immediately on mount
-    autoPublish()
-
-    // Then run every 2 minutes
-    intervalRef.current = setInterval(autoPublish, 2 * 60 * 1000) // 2 minutes
-
-    // Request notification permission
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
+    // Request notification permission immediately
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          console.log('Notification permission:', permission)
+        })
+      }
     }
 
-    // Cleanup on unmount
+    autoPublish()
+    intervalRef.current = setInterval(autoPublish, 2 * 60 * 1000)
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [])
 
-  // This component doesn't render anything
   return null
 }
