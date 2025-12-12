@@ -58,40 +58,31 @@ ALTER TABLE public.workspace_invitations ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can view workspaces they are members of" ON public.workspaces;
 DROP POLICY IF EXISTS "Users can create workspaces" ON public.workspaces;
-DROP POLICY IF EXISTS "Workspace owners can update their workspaces" ON public.workspaces;
+DROP POLICY IF EXISTS "Workspace owners and admins can update workspaces" ON public.workspaces;
 DROP POLICY IF EXISTS "Workspace owners can delete their workspaces" ON public.workspaces;
 DROP POLICY IF EXISTS "Users can view workspace members" ON public.workspace_members;
-DROP POLICY IF EXISTS "Workspace admins can manage members" ON public.workspace_members;
+DROP POLICY IF EXISTS "Workspace owners can manage members" ON public.workspace_members;
+DROP POLICY IF EXISTS "Workspace owners can insert members" ON public.workspace_members;
+DROP POLICY IF EXISTS "Workspace owners can update members" ON public.workspace_members;
+DROP POLICY IF EXISTS "Workspace owners can delete members" ON public.workspace_members;
 DROP POLICY IF EXISTS "Users can view their invitations" ON public.workspace_invitations;
 DROP POLICY IF EXISTS "Workspace admins can manage invitations" ON public.workspace_invitations;
+DROP POLICY IF EXISTS "Workspace owners can insert invitations" ON public.workspace_invitations;
+DROP POLICY IF EXISTS "Workspace owners can update invitations" ON public.workspace_invitations;
+DROP POLICY IF EXISTS "Workspace owners can delete invitations" ON public.workspace_invitations;
 
 -- RLS Policies for workspaces table
-CREATE POLICY "Users can view workspaces they are members of"
+CREATE POLICY "Users can view workspaces they own"
   ON public.workspaces FOR SELECT
-  USING (
-    auth.uid() = owner_id OR
-    EXISTS (
-      SELECT 1 FROM public.workspace_members
-      WHERE workspace_members.workspace_id = workspaces.id
-      AND workspace_members.user_id = auth.uid()
-    )
-  );
+  USING (auth.uid() = owner_id);
 
 CREATE POLICY "Users can create workspaces"
   ON public.workspaces FOR INSERT
   WITH CHECK (auth.uid() = owner_id);
 
-CREATE POLICY "Workspace owners and admins can update workspaces"
+CREATE POLICY "Workspace owners can update workspaces"
   ON public.workspaces FOR UPDATE
-  USING (
-    auth.uid() = owner_id OR
-    EXISTS (
-      SELECT 1 FROM public.workspace_members
-      WHERE workspace_members.workspace_id = workspaces.id
-      AND workspace_members.user_id = auth.uid()
-      AND workspace_members.role IN ('owner', 'admin')
-    )
-  );
+  USING (auth.uid() = owner_id);
 
 CREATE POLICY "Workspace owners can delete their workspaces"
   ON public.workspaces FOR DELETE
@@ -101,27 +92,33 @@ CREATE POLICY "Workspace owners can delete their workspaces"
 CREATE POLICY "Users can view workspace members"
   ON public.workspace_members FOR SELECT
   USING (
-    EXISTS (
-      SELECT 1 FROM public.workspaces
-      WHERE workspaces.id = workspace_members.workspace_id
-      AND (
-        workspaces.owner_id = auth.uid() OR
-        EXISTS (
-          SELECT 1 FROM public.workspace_members wm
-          WHERE wm.workspace_id = workspaces.id
-          AND wm.user_id = auth.uid()
-        )
-      )
+    user_id = auth.uid() OR
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "Workspace owners can manage members"
-  ON public.workspace_members FOR ALL
+CREATE POLICY "Workspace owners can insert members"
+  ON public.workspace_members FOR INSERT
+  WITH CHECK (
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Workspace owners can update members"
+  ON public.workspace_members FOR UPDATE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.workspaces
-      WHERE workspaces.id = workspace_members.workspace_id
-      AND workspaces.owner_id = auth.uid()
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Workspace owners can delete members"
+  ON public.workspace_members FOR DELETE
+  USING (
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
     )
   );
 
@@ -130,36 +127,32 @@ CREATE POLICY "Users can view their invitations"
   ON public.workspace_invitations FOR SELECT
   USING (
     email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
-    EXISTS (
-      SELECT 1 FROM public.workspaces
-      WHERE workspaces.id = workspace_invitations.workspace_id
-      AND (
-        workspaces.owner_id = auth.uid() OR
-        EXISTS (
-          SELECT 1 FROM public.workspace_members
-          WHERE workspace_members.workspace_id = workspaces.id
-          AND workspace_members.user_id = auth.uid()
-          AND workspace_members.role IN ('owner', 'admin')
-        )
-      )
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
     )
   );
 
-CREATE POLICY "Workspace admins can manage invitations"
-  ON public.workspace_invitations FOR ALL
+CREATE POLICY "Workspace owners can insert invitations"
+  ON public.workspace_invitations FOR INSERT
+  WITH CHECK (
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Workspace owners can update invitations"
+  ON public.workspace_invitations FOR UPDATE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.workspaces
-      WHERE workspaces.id = workspace_invitations.workspace_id
-      AND (
-        workspaces.owner_id = auth.uid() OR
-        EXISTS (
-          SELECT 1 FROM public.workspace_members
-          WHERE workspace_members.workspace_id = workspaces.id
-          AND workspace_members.user_id = auth.uid()
-          AND workspace_members.role IN ('owner', 'admin')
-        )
-      )
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Workspace owners can delete invitations"
+  ON public.workspace_invitations FOR DELETE
+  USING (
+    workspace_id IN (
+      SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
     )
   );
 
