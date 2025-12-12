@@ -254,7 +254,7 @@ export default function ScheduledPage() {
                   <h3 className="font-bold text-gray-900 mb-1">Automatic Publishing Enabled</h3>
                   <p className="text-gray-700 text-sm">
                     Posts will be automatically published to LinkedIn at their scheduled time. 
-                    The system checks every 5 minutes for posts that are ready to publish. 
+                    The system checks every 2 minutes while you're logged in. 
                     You can also use "Publish Now" to post immediately.
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import AutoPublishService from './AutoPublishService'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -180,6 +181,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {/* Auto-Publish Service - runs in background */}
+      <AutoPublishService />
     </div>
   )
 }
