@@ -87,10 +87,13 @@ export default function AnalyticsPage() {
         const totalLength = posts.reduce((sum, p) => sum + (p.content?.length || 0), 0)
         const avgPostLength = posts.length > 0 ? Math.round(totalLength / posts.length) : 0
 
-        // Calculate posts by day of week
-        const postsByDay: { [key: string]: number } = {
-          'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0
-        }
+        // Calculate posts by day of week (Monday to Sunday)
+        const dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        const postsByDay: { [key: string]: number} = {}
+        dayOrder.forEach(day => {
+          postsByDay[day] = 0
+        })
+        
         posts.forEach(post => {
           const date = new Date(post.created_at)
           const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
@@ -369,17 +372,20 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Posts by Day of Week</h3>
               <div className="h-64 flex items-end justify-between space-x-2">
-                {Object.entries(analytics.postsByDay).map(([day, count]) => (
-                  <div key={day} className="flex-1 flex flex-col items-center">
-                    <div
-                      className="w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
-                      style={{ height: `${(count / maxPostsByDay) * 100}%`, minHeight: count > 0 ? '20px' : '0' }}
-                      title={`${count} posts`}
-                    ></div>
-                    <span className="text-xs text-gray-600 mt-3 font-medium">{day}</span>
-                    <span className="text-xs text-gray-400">{count}</span>
-                  </div>
-                ))}
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
+                  const count = analytics.postsByDay[day] || 0
+                  return (
+                    <div key={day} className="flex-1 flex flex-col items-center">
+                      <div
+                        className="w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
+                        style={{ height: `${maxPostsByDay > 0 ? (count / maxPostsByDay) * 100 : 0}%`, minHeight: count > 0 ? '20px' : '0' }}
+                        title={`${count} posts`}
+                      ></div>
+                      <span className="text-xs text-gray-600 mt-3 font-medium">{day}</span>
+                      <span className="text-xs text-gray-400">{count}</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -387,17 +393,20 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Posts Over Time (Last 6 Months)</h3>
               <div className="h-64 flex items-end justify-between space-x-2">
-                {Object.entries(analytics.postsByMonth).map(([month, count]) => (
-                  <div key={month} className="flex-1 flex flex-col items-center">
-                    <div
-                      className="w-full bg-gradient-to-t from-green-500 to-green-600 rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
-                      style={{ height: `${(count / maxPostsByMonth) * 100}%`, minHeight: count > 0 ? '20px' : '0' }}
-                      title={`${count} posts`}
-                    ></div>
-                    <span className="text-xs text-gray-600 mt-3 font-medium text-center">{month.split(' ')[0]}</span>
-                    <span className="text-xs text-gray-400">{count}</span>
-                  </div>
-                ))}
+                {Object.entries(analytics.postsByMonth).map(([month, count]) => {
+                  const monthLabel = month.split(' ')[0] // Just show month name
+                  return (
+                    <div key={month} className="flex-1 flex flex-col items-center">
+                      <div
+                        className="w-full bg-gradient-to-t from-green-500 to-green-600 rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
+                        style={{ height: `${maxPostsByMonth > 0 ? (count / maxPostsByMonth) * 100 : 0}%`, minHeight: count > 0 ? '20px' : '0' }}
+                        title={`${month}: ${count} posts`}
+                      ></div>
+                      <span className="text-xs text-gray-600 mt-3 font-medium text-center">{monthLabel}</span>
+                      <span className="text-xs text-gray-400">{count}</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
