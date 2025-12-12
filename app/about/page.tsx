@@ -14,7 +14,7 @@ export default function AboutPage() {
           <div className="hidden md:flex space-x-8">
             <Link href="/" className="hover:text-primary">Home</Link>
             <Link href="/features" className="hover:text-primary">Features</Link>
-            <Link href="/pricing" className="hover:text-primary">Pricing</Link>
+
             <Link href="/about" className="text-primary font-medium">About</Link>
             <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="hover:text-primary">Contact</Link>

@@ -70,7 +70,7 @@ export default function ContactPage() {
           <div className="hidden md:flex space-x-8">
             <Link href="/" className="hover:text-primary">Home</Link>
             <Link href="/features" className="hover:text-primary">Features</Link>
-            <Link href="/pricing" className="hover:text-primary">Pricing</Link>
+
             <Link href="/about" className="hover:text-primary">About</Link>
             <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="text-primary font-medium">Contact</Link>
@@ -265,15 +265,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl">
-                <h3 className="font-bold text-lg mb-2">Enterprise Solutions</h3>
-                <p className="text-gray-600 mb-4">
-                  Looking for a custom solution for your team? Our enterprise team is ready to help.
-                </p>
-                <Link href="/pricing" className="text-primary font-medium hover:underline">
-                  Learn more about Enterprise →
-                </Link>
-              </div>
+
             </div>
 
           </div>

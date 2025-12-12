@@ -111,10 +111,7 @@ export default function GeneratePage() {
                   <p className="text-gray-600">Create engaging LinkedIn posts powered by AI in seconds</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">Posts remaining</div>
-                <div className="text-2xl font-bold text-primary">10</div>
-              </div>
+
             </div>
           </div>
 
