@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic'
 // GET workspace details
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createRouteHandlerClient({ cookies })
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -50,9 +51,10 @@ export async function GET(
 // PUT update workspace
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createRouteHandlerClient({ cookies })
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -92,9 +94,10 @@ export async function PUT(
 // DELETE workspace
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createRouteHandlerClient({ cookies })
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()

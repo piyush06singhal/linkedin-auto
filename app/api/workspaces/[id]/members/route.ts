@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic'
 // GET workspace members
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params
     const supabase = createRouteHandlerClient({ cookies })
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export default function WorkspaceDetailPage({ params }: { params: { id: string } }) {
+export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [workspace, setWorkspace] = useState<any>(null)
   const [members, setMembers] = useState<any[]>([])
@@ -15,15 +15,19 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('editor')
   const [inviting, setInviting] = useState(false)
+  const [workspaceId, setWorkspaceId] = useState<string>('')
 
   useEffect(() => {
-    fetchWorkspaceDetails()
-    fetchMembers()
-  }, [params.id])
+    params.then(p => {
+      setWorkspaceId(p.id)
+      fetchWorkspaceDetails(p.id)
+      fetchMembers(p.id)
+    })
+  }, [])
 
-  const fetchWorkspaceDetails = async () => {
+  const fetchWorkspaceDetails = async (id: string) => {
     try {
-      const response = await fetch(`/api/workspaces/${params.id}`)
+      const response = await fetch(`/api/workspaces/${id}`)
       const data = await response.json()
 
       if (data.success) {
@@ -36,9 +40,9 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
     }
   }
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (id: string) => {
     try {
-      const response = await fetch(`/api/workspaces/${params.id}/members`)
+      const response = await fetch(`/api/workspaces/${id}/members`)
       const data = await response.json()
 
       if (data.success) {
@@ -58,7 +62,7 @@ export default function WorkspaceDetailPage({ params }: { params: { id: string }
     setInviting(true)
 
     try {
-      const response = await fetch(`/api/workspaces/${params.id}/invite`, {
+      const response = await fetch(`/api/workspaces/${workspaceId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
