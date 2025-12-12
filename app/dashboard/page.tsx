@@ -209,8 +209,17 @@ export default function DashboardPage() {
               </div>
               <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{stats.reachIncrease > 0 ? 'Active' : 'Start'}</span>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.reachIncrease.toLocaleString()}</div>
-            <p className="text-green-100 text-sm">Total Reach</p>
+            {stats.reachIncrease > 0 ? (
+              <>
+                <div className="text-3xl font-bold mb-1">{stats.reachIncrease.toLocaleString()}</div>
+                <p className="text-green-100 text-sm">Total Reach</p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold mb-1">No data yet</div>
+                <p className="text-green-100 text-sm">Publish posts to track reach</p>
+              </>
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
@@ -220,10 +229,19 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                 </svg>
               </div>
-              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{stats.engagementRate > 0 ? `${stats.engagementRate}%` : 'N/A'}</span>
+              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">N/A</span>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.engagementRate}%</div>
-            <p className="text-purple-100 text-sm">Engagement Rate</p>
+            {stats.engagementRate > 0 ? (
+              <>
+                <div className="text-3xl font-bold mb-1">{stats.engagementRate}%</div>
+                <p className="text-purple-100 text-sm">Engagement Rate</p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold mb-1">No data yet</div>
+                <p className="text-purple-100 text-sm">Publish posts to track engagement</p>
+              </>
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
