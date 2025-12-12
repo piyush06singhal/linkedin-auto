@@ -28,25 +28,18 @@ export default function WorkspacePage() {
   }, [])
 
   const fetchWorkspaces = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
+    try {
+      const response = await fetch('/api/workspaces/list')
+      const data = await response.json()
 
-    // For now, show a default personal workspace
-    // In a full implementation, you would fetch from a workspaces table
-    setWorkspaces([
-      {
-        id: user.id,
-        name: 'Personal Workspace',
-        description: 'My personal LinkedIn content',
-        members: 1,
-        created_at: new Date().toISOString(),
-        role: 'owner'
+      if (data.success) {
+        setWorkspaces(data.workspaces)
       }
-    ])
-    setLoading(false)
+    } catch (error) {
+      console.error('Error fetching workspaces:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCreateWorkspace = async () => {
@@ -58,35 +51,34 @@ export default function WorkspacePage() {
     setCreating(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        alert('You must be logged in to create a workspace')
-        return
-      }
+      const response = await fetch('/api/workspaces/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: workspaceName.trim(),
+          description: workspaceDescription.trim()
+        })
+      })
 
-      // Create new workspace
-      const newWorkspace: Workspace = {
-        id: `workspace-${Date.now()}`,
-        name: workspaceName.trim(),
-        description: workspaceDescription.trim(),
-        members: 1,
-        created_at: new Date().toISOString(),
-        role: 'owner'
-      }
+      const data = await response.json()
 
-      // Add to workspaces list
-      setWorkspaces(prev => [...prev, newWorkspace])
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create workspace')
+      }
 
       // Close modal and reset form
       setShowCreateModal(false)
       setWorkspaceName('')
       setWorkspaceDescription('')
       
-      alert(`✅ Workspace "${newWorkspace.name}" created successfully!`)
+      alert(`✅ Workspace "${data.workspace.name}" created successfully!`)
+      
+      // Refresh workspaces list
+      fetchWorkspaces()
 
     } catch (error: any) {
       console.error('Error creating workspace:', error)
-      alert('Failed to create workspace. Please try again.')
+      alert(error.message || 'Failed to create workspace. Please try again.')
     } finally {
       setCreating(false)
     }
@@ -235,7 +227,10 @@ export default function WorkspacePage() {
                       </svg>
                       <span>{workspace.members} member{workspace.members !== 1 ? 's' : ''}</span>
                     </div>
-                    <button className="text-primary hover:underline text-sm font-medium">
+                    <button 
+                      onClick={() => router.push(`/dashboard/workspace/${workspace.id}`)}
+                      className="text-primary hover:underline text-sm font-medium"
+                    >
                       Open →
                     </button>
                   </div>
