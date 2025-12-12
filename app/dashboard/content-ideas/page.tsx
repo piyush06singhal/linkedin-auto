@@ -49,7 +49,7 @@ export default function ContentIdeasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category: selectedCategory,
-          count: 9 // Generate 9 ideas at a time (unlimited total)
+          count: 6 // Generate 6 ideas at a time (more efficient, unlimited total)
         }),
       })
 
@@ -68,8 +68,8 @@ export default function ContentIdeasPage() {
       // Add new ideas to existing ones (unlimited)
       setIdeas(prevIdeas => [...prevIdeas, ...data.ideas])
       
-      // Set a 3 second cooldown after successful generation
-      setCooldown(3)
+      // Set a 5 second cooldown after successful generation to avoid rate limits
+      setCooldown(5)
     } catch (error: any) {
       console.error('❌ Error generating ideas:', error)
       alert(error.message || 'Failed to generate ideas. Please try again.')

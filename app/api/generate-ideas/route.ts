@@ -5,7 +5,7 @@ import { createGeminiClient } from '@/lib/ai/gemini-client'
 
 // Rate limiting: Track last request time per user
 const lastRequestTime = new Map<string, number>()
-const MIN_REQUEST_INTERVAL = 3000 // 3 seconds between requests
+const MIN_REQUEST_INTERVAL = 5000 // 5 seconds between requests to avoid quota issues
 
 export async function POST(request: Request) {
   try {
