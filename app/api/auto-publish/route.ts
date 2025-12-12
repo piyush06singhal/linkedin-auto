@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { LinkedInClient } from '@/lib/linkedin/client'
+import { notifyPostPublished, notifyPostFailed } from '@/lib/notifications/service'
 
 export const dynamic = 'force-dynamic'
 
@@ -96,10 +97,16 @@ export async function POST(request: Request) {
           })
           .eq('id', post.id)
 
+        // Create success notification
+        await notifyPostPublished(user.id, post.id)
+
         results.published++
 
       } catch (error: any) {
         console.error(`❌ Failed to publish post ${post.id}:`, error)
+        
+        // Create failure notification
+        await notifyPostFailed(user.id, post.id, error.message || 'Unknown error')
         
         results.failed++
         results.errors.push({

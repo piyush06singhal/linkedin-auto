@@ -13,9 +13,11 @@ export class ImageGenerator {
     this.apiKey = apiKey // Reserved for future Unsplash API key usage
   }
 
-  // Generate image using Unsplash API with official API key
+  // Generate image using AI (Unsplash for stock photos as fallback)
   async generateImage(options: ImageGenerationOptions): Promise<string> {
     const { prompt, style = 'professional', aspectRatio = '1:1' } = options
+    
+    console.log('🎨 Generating image with prompt:', prompt)
 
     // Enhanced prompt based on style - more specific keywords for better results
     const styleKeywords = {

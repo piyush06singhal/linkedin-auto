@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { notifyPostScheduled } from '@/lib/notifications/service'
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    // Create notification for scheduled post
+    await notifyPostScheduled(user.id, postId, new Date(scheduledFor))
 
     return NextResponse.json({ success: true, post })
   } catch (error: any) {

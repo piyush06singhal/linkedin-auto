@@ -115,21 +115,13 @@ CREATE POLICY "Users can view workspace members"
     )
   );
 
-CREATE POLICY "Workspace owners and admins can manage members"
+CREATE POLICY "Workspace owners can manage members"
   ON public.workspace_members FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM public.workspaces
       WHERE workspaces.id = workspace_members.workspace_id
-      AND (
-        workspaces.owner_id = auth.uid() OR
-        EXISTS (
-          SELECT 1 FROM public.workspace_members wm
-          WHERE wm.workspace_id = workspaces.id
-          AND wm.user_id = auth.uid()
-          AND wm.role IN ('owner', 'admin')
-        )
-      )
+      AND workspaces.owner_id = auth.uid()
     )
   );
 

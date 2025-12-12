@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { LinkedInClient } from '@/lib/linkedin/client'
+import { notifyPostPublished, notifyPostFailed } from '@/lib/notifications/service'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  let userId: string | undefined
+  let postId: string | undefined
+  
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -15,8 +19,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    userId = user.id
+
     const body = await request.json()
-    const { postId } = body
+    postId = body.postId
 
     if (!postId) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
@@ -76,6 +82,9 @@ export async function POST(request: Request) {
       console.error('Error updating post status:', updateError)
     }
 
+    // Create success notification
+    await notifyPostPublished(user.id, postId)
+
     return NextResponse.json({ 
       success: true, 
       message: 'Post published to LinkedIn successfully!',
@@ -84,6 +93,11 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Publish to LinkedIn error:', error)
+    
+    // Create failure notification if we have user and post info
+    if (userId && postId) {
+      await notifyPostFailed(userId, postId, error.message || 'Unknown error')
+    }
     
     // Handle specific LinkedIn API errors
     if (error.message.includes('401') || error.message.includes('Unauthorized')) {

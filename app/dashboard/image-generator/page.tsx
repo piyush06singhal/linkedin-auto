@@ -59,8 +59,14 @@ export default function ImageGeneratorPage() {
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">AI Image Generator</h1>
-          <p className="text-gray-600">Create stunning images for your LinkedIn posts</p>
+          <h1 className="text-3xl font-bold mb-2">Image Finder</h1>
+          <p className="text-gray-600">Find professional stock photos for your LinkedIn posts from Unsplash</p>
+          <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> This searches Unsplash's stock photo library for images matching your keywords. 
+              It doesn't generate custom AI images. For best results, use simple keywords like "business meeting", "technology", "teamwork", etc.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
