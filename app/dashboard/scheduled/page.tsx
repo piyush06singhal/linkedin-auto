@@ -70,21 +70,28 @@ export default function ScheduledPage() {
     if (!confirm('Publish this post to LinkedIn now?')) return
 
     try {
-      // For now, just mark as published since LinkedIn OAuth isn't set up
-      // In production, this would call the LinkedIn API
-      await supabase
-        .from('posts')
-        .update({ 
-          status: 'published',
-          published_at: new Date().toISOString()
-        })
-        .eq('id', post.id)
+      setLoading(true)
+      
+      // Call API to publish to LinkedIn
+      const response = await fetch('/api/publish-to-linkedin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: post.id }),
+      })
 
-      alert('Post marked as published! (LinkedIn OAuth integration coming soon)')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to publish')
+      }
+
+      alert('✅ Post published to LinkedIn successfully!')
       fetchScheduledPosts()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error publishing post:', error)
-      alert('Failed to publish post')
+      alert(`❌ Failed to publish: ${error.message}`)
+    } finally {
+      setLoading(false)
     }
   }
 
