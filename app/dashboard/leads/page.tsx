@@ -224,8 +224,8 @@ export default function LeadsPage() {
                 <h3 className="text-2xl font-bold mb-2">Lead Lists</h3>
                 <p className="text-purple-100 mb-4">Organize leads into custom lists for better management</p>
                 <div className="flex items-center text-sm font-medium">
-                  <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs mr-2">⚠️ Pro feature</span>
-                  <svg className="w-5 h-5 ml-auto group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span>Organize your leads efficiently</span>
+                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>

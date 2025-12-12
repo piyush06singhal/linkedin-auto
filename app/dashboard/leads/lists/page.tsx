@@ -128,7 +128,7 @@ export default function LeadListsPage() {
             <p className="text-gray-600">Organize leads into custom lists for better management</p>
           </div>
 
-          {/* Pro Feature Banner */}
+          {/* Coming Soon Banner */}
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-8 text-white mb-8">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -136,16 +136,16 @@ export default function LeadListsPage() {
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
                   </svg>
-                  <span className="px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-sm font-semibold">Pro Feature</span>
+                  <span className="px-3 py-1 bg-blue-400 text-blue-900 rounded-full text-sm font-semibold">Coming Soon</span>
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Upgrade to Organize Your Leads</h2>
-                <p className="text-purple-100 mb-4">Create custom lists, add tags, and manage your leads more effectively with our Pro plan</p>
+                <h2 className="text-2xl font-bold mb-2">Lead Lists - In Development</h2>
+                <p className="text-purple-100 mb-4">We're building powerful list management features to help you organize and manage your leads more effectively</p>
                 <ul className="space-y-2 text-sm text-purple-100">
                   <li className="flex items-center space-x-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Unlimited custom lists</span>
+                    <span>Unlimited custom lists - 100% Free</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,9 +162,10 @@ export default function LeadListsPage() {
                 </ul>
               </div>
               <div className="ml-8">
-                <button className="bg-white text-purple-600 px-8 py-4 rounded-xl font-bold hover:bg-purple-50 transition shadow-lg text-lg">
-                  Upgrade Now
-                </button>
+                <div className="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-xl font-bold text-lg text-center">
+                  <div className="text-2xl mb-1">🚀</div>
+                  <div>Coming Soon</div>
+                </div>
               </div>
             </div>
           </div>
