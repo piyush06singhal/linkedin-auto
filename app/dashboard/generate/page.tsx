@@ -22,12 +22,18 @@ export default function GeneratePage() {
     // Check if template was passed from templates page
     const template = searchParams.get('template')
     const templateName = searchParams.get('name')
+    const idea = searchParams.get('idea')
     
     if (template) {
       setGeneratedPosts([decodeURIComponent(template)])
       if (templateName) {
         setDescription(`Using template: ${decodeURIComponent(templateName)}`)
       }
+    }
+    
+    // Check if content idea was passed
+    if (idea) {
+      setDescription(decodeURIComponent(idea))
     }
   }, [searchParams])
 

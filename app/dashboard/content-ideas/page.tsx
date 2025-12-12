@@ -83,16 +83,41 @@ export default function ContentIdeasPage() {
   ]
 
   useEffect(() => {
-    setIdeas(mockIdeas)
+    // Load initial ideas on mount
+    handleGenerateMore()
   }, [])
 
   const handleGenerateMore = async () => {
     setGenerating(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIdeas([...mockIdeas, ...mockIdeas.map(idea => ({ ...idea, id: idea.id + '-new' }))])
+    
+    try {
+      console.log('🚀 Generating AI content ideas...')
+      
+      const response = await fetch('/api/generate-ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: selectedCategory,
+          count: 6
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate ideas')
+      }
+
+      console.log('✅ Received', data.ideas.length, 'ideas from AI')
+      
+      // Add new ideas to existing ones
+      setIdeas(prevIdeas => [...prevIdeas, ...data.ideas])
+    } catch (error: any) {
+      console.error('❌ Error generating ideas:', error)
+      alert(error.message || 'Failed to generate ideas. Please try again.')
+    } finally {
       setGenerating(false)
-    }, 1500)
+    }
   }
 
   const handleLogout = async () => {
@@ -317,12 +342,22 @@ export default function ContentIdeasPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                      <button className="flex-1 bg-primary text-white py-2.5 px-4 rounded-xl font-medium hover:bg-secondary transition shadow-sm text-sm">
+                      <Link
+                        href={`/dashboard/generate?idea=${encodeURIComponent(idea.title + ': ' + idea.description)}`}
+                        className="flex-1 bg-primary text-white py-2.5 px-4 rounded-xl font-medium hover:bg-secondary transition shadow-sm text-sm text-center"
+                      >
                         Use This Idea
-                      </button>
-                      <button className="w-10 h-10 border border-gray-200 rounded-xl hover:border-primary hover:bg-blue-50 hover:text-primary transition flex items-center justify-center">
+                      </Link>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${idea.title}\n\n${idea.description}`)
+                          alert('Idea copied to clipboard!')
+                        }}
+                        className="w-10 h-10 border border-gray-200 rounded-xl hover:border-primary hover:bg-blue-50 hover:text-primary transition flex items-center justify-center"
+                        title="Copy to clipboard"
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                         </svg>
                       </button>
                     </div>
