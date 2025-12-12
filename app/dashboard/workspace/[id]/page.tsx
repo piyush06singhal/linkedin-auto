@@ -62,6 +62,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
     setInviting(true)
 
     try {
+      console.log('Sending invitation to:', inviteEmail, 'with role:', inviteRole)
+      console.log('Workspace ID:', workspaceId)
+      
       const response = await fetch(`/api/workspaces/${workspaceId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,10 +74,13 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
         })
       })
 
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send invitation')
+        const errorMsg = data.details ? `${data.error}: ${data.details}` : data.error
+        throw new Error(errorMsg || 'Failed to send invitation')
       }
 
       alert(`✅ Invitation sent to ${inviteEmail}`)
@@ -83,6 +89,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
       setInviteRole('editor')
 
     } catch (error: any) {
+      console.error('Invitation error:', error)
       alert(error.message || 'Failed to send invitation')
     } finally {
       setInviting(false)

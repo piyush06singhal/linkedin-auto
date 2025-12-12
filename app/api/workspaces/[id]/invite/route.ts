@@ -10,36 +10,55 @@ export async function POST(
 ) {
   try {
     const params = await context.params
+    console.log('📧 Invite API called for workspace:', params.id)
+    
     const supabase = createRouteHandlerClient({ cookies })
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      console.error('❌ Auth error:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('✅ User authenticated:', user.id)
+
     const body = await request.json()
     const { email, role = 'editor' } = body
+
+    console.log('📝 Invite details - Email:', email, 'Role:', role)
 
     if (!email || !email.trim()) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
     // Check if user is workspace owner or has permission to invite
-    const { data: workspace } = await supabase
+    const { data: workspace, error: workspaceError } = await supabase
       .from('workspaces')
       .select('owner_id')
       .eq('id', params.id)
       .single()
 
+    if (workspaceError) {
+      console.error('❌ Error fetching workspace:', workspaceError)
+      return NextResponse.json({ 
+        error: 'Workspace not found',
+        details: workspaceError.message 
+      }, { status: 404 })
+    }
+
     if (!workspace) {
+      console.error('❌ Workspace not found:', params.id)
       return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
     }
+
+    console.log('✅ Workspace found. Owner:', workspace.owner_id, 'Current user:', user.id)
 
     // Check if user is owner or admin
     const isOwner = workspace.owner_id === user.id
     
     if (!isOwner) {
+      console.log('⚠️ User is not owner, checking member role...')
       const { data: member } = await supabase
         .from('workspace_members')
         .select('role')
@@ -47,12 +66,18 @@ export async function POST(
         .eq('user_id', user.id)
         .single()
 
+      console.log('Member data:', member)
+
       if (!member || !['owner', 'admin'].includes(member.role)) {
+        console.error('❌ Permission denied. Member role:', member?.role)
         return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
       }
+    } else {
+      console.log('✅ User is workspace owner')
     }
 
     // Check if already invited or member
+    console.log('🔍 Checking for existing invitation...')
     const { data: existing } = await supabase
       .from('workspace_invitations')
       .select('*')
@@ -62,10 +87,14 @@ export async function POST(
       .single()
 
     if (existing) {
+      console.log('⚠️ User already invited')
       return NextResponse.json({ error: 'User already invited' }, { status: 400 })
     }
 
+    console.log('✅ No existing invitation found')
+
     // Create invitation
+    console.log('📨 Creating invitation...')
     const { data: invitation, error: inviteError } = await supabase
       .from('workspace_invitations')
       .insert({
@@ -78,12 +107,15 @@ export async function POST(
       .single()
 
     if (inviteError) {
-      console.error('Error creating invitation:', inviteError)
+      console.error('❌ Error creating invitation:', inviteError)
       return NextResponse.json({ 
         error: 'Failed to send invitation', 
-        details: inviteError.message 
+        details: inviteError.message,
+        code: inviteError.code
       }, { status: 500 })
     }
+
+    console.log('✅ Invitation created successfully:', invitation.id)
 
     // TODO: Send email notification
 
