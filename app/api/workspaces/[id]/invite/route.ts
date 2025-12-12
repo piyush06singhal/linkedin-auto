@@ -25,16 +25,31 @@ export async function POST(
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    // Check if user has permission to invite
-    const { data: member } = await supabase
-      .from('workspace_members')
-      .select('role')
-      .eq('workspace_id', params.id)
-      .eq('user_id', user.id)
+    // Check if user is workspace owner or has permission to invite
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('owner_id')
+      .eq('id', params.id)
       .single()
 
-    if (!member || !['owner', 'admin'].includes(member.role)) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    if (!workspace) {
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+    }
+
+    // Check if user is owner or admin
+    const isOwner = workspace.owner_id === user.id
+    
+    if (!isOwner) {
+      const { data: member } = await supabase
+        .from('workspace_members')
+        .select('role')
+        .eq('workspace_id', params.id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (!member || !['owner', 'admin'].includes(member.role)) {
+        return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+      }
     }
 
     // Check if already invited or member
@@ -64,7 +79,10 @@ export async function POST(
 
     if (inviteError) {
       console.error('Error creating invitation:', inviteError)
-      return NextResponse.json({ error: 'Failed to send invitation' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Failed to send invitation', 
+        details: inviteError.message 
+      }, { status: 500 })
     }
 
     // TODO: Send email notification
