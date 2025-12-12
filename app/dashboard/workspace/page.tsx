@@ -28,10 +28,17 @@ export default function WorkspacePage() {
   }, [])
 
   const fetchWorkspaces = async () => {
-    // Mock data for now
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    // For now, show a default personal workspace
+    // In a full implementation, you would fetch from a workspaces table
     setWorkspaces([
       {
-        id: '1',
+        id: user.id,
         name: 'Personal Workspace',
         description: 'My personal LinkedIn content',
         members: 1,
@@ -43,17 +50,46 @@ export default function WorkspacePage() {
   }
 
   const handleCreateWorkspace = async () => {
-    if (!workspaceName.trim()) return
+    if (!workspaceName.trim()) {
+      alert('Please enter a workspace name')
+      return
+    }
 
     setCreating(true)
-    // Add workspace creation logic here
-    setTimeout(() => {
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('You must be logged in to create a workspace')
+        return
+      }
+
+      // Create new workspace
+      const newWorkspace: Workspace = {
+        id: `workspace-${Date.now()}`,
+        name: workspaceName.trim(),
+        description: workspaceDescription.trim(),
+        members: 1,
+        created_at: new Date().toISOString(),
+        role: 'owner'
+      }
+
+      // Add to workspaces list
+      setWorkspaces(prev => [...prev, newWorkspace])
+
+      // Close modal and reset form
       setShowCreateModal(false)
       setWorkspaceName('')
       setWorkspaceDescription('')
+      
+      alert(`✅ Workspace "${newWorkspace.name}" created successfully!`)
+
+    } catch (error: any) {
+      console.error('Error creating workspace:', error)
+      alert('Failed to create workspace. Please try again.')
+    } finally {
       setCreating(false)
-      fetchWorkspaces()
-    }, 1000)
+    }
   }
 
   if (loading) {
