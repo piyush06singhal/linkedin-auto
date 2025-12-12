@@ -87,19 +87,41 @@ Generate the JSON array now:`
     // Parse the JSON response
     let ideas
     try {
-      // Extract JSON from response
-      const jsonMatch = response.match(/\[[\s\S]*\]/)
+      // Remove markdown code blocks if present
+      let cleanedResponse = response.trim()
+      
+      // Remove ```json and ``` markers
+      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '')
+      cleanedResponse = cleanedResponse.replace(/```\s*/g, '')
+      
+      // Extract JSON array from response
+      const jsonMatch = cleanedResponse.match(/\[[\s\S]*\]/)
       if (jsonMatch) {
         ideas = JSON.parse(jsonMatch[0])
       } else {
+        console.error('❌ No JSON array found in response')
+        console.error('Raw response:', response)
         throw new Error('No JSON array found in response')
       }
-    } catch (parseError) {
+      
+      // Validate the structure
+      if (!Array.isArray(ideas) || ideas.length === 0) {
+        throw new Error('Invalid response structure: expected non-empty array')
+      }
+      
+      // Validate each idea has required fields
+      ideas.forEach((idea: any, index: number) => {
+        if (!idea.title || !idea.description || !idea.category) {
+          console.error(`❌ Invalid idea at index ${index}:`, idea)
+          throw new Error(`Invalid idea structure at index ${index}`)
+        }
+      })
+      
+    } catch (parseError: any) {
       console.error('❌ Failed to parse AI response:', parseError)
       console.error('Raw response:', response)
       
-      // Don't use fallback - throw error so user knows AI failed
-      throw new Error('Failed to parse AI response. The AI returned invalid data. Please try again.')
+      throw new Error(`Failed to parse AI response: ${parseError.message}. Please try again.`)
     }
 
     // Add unique IDs to each idea
