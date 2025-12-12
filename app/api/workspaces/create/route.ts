@@ -34,7 +34,17 @@ export async function POST(request: Request) {
 
     if (createError) {
       console.error('Error creating workspace:', createError)
-      return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 })
+      
+      // Check if table doesn't exist
+      if (createError.message?.includes('relation "workspaces" does not exist')) {
+        return NextResponse.json({ 
+          error: 'Database not set up. Please run the workspaces migration in Supabase SQL Editor.' 
+        }, { status: 500 })
+      }
+      
+      return NextResponse.json({ 
+        error: createError.message || 'Failed to create workspace' 
+      }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, workspace })
