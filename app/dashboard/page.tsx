@@ -16,9 +16,10 @@ export default function DashboardPage() {
     published: 0,
     weeklyGoal: 7,
     currentWeekPosts: 0,
-    engagementRate: 89,
-    reachIncrease: 156,
+    engagementRate: 0,
+    totalReach: 0,
   })
+  const [syncingAnalytics, setSyncingAnalytics] = useState(false)
   const [loading, setLoading] = useState(true)
   const [recentPosts, setRecentPosts] = useState<any[]>([])
 
@@ -63,20 +64,25 @@ export default function DashboardPage() {
       const scheduled = allPosts.filter(p => p.status === 'scheduled').length
       const published = allPosts.filter(p => p.status === 'published').length
 
-      // Calculate real engagement rate from published posts
+      // Calculate real engagement rate and reach from published posts with LinkedIn data
       const publishedPosts = allPosts.filter(p => p.status === 'published')
       let avgEngagementRate = 0
       let totalReach = 0
       
       if (publishedPosts.length > 0) {
-        const totalEngagement = publishedPosts.reduce((sum, post) => {
-          return sum + (post.engagement_rate || 0)
-        }, 0)
-        avgEngagementRate = Math.round(totalEngagement / publishedPosts.length)
+        // Only calculate from posts that have LinkedIn analytics data
+        const postsWithAnalytics = publishedPosts.filter(p => p.reach && p.reach > 0)
         
-        totalReach = publishedPosts.reduce((sum, post) => {
-          return sum + (post.reach || 0)
-        }, 0)
+        if (postsWithAnalytics.length > 0) {
+          const totalEngagement = postsWithAnalytics.reduce((sum, post) => {
+            return sum + (post.engagement_rate || 0)
+          }, 0)
+          avgEngagementRate = Math.round(totalEngagement / postsWithAnalytics.length)
+          
+          totalReach = postsWithAnalytics.reduce((sum, post) => {
+            return sum + (post.reach || 0)
+          }, 0)
+        }
       }
 
       // Calculate weekly posts (last 7 days)
@@ -95,7 +101,7 @@ export default function DashboardPage() {
         weeklyGoal: 7,
         currentWeekPosts: weeklyPosts,
         engagementRate: avgEngagementRate,
-        reachIncrease: totalReach,
+        totalReach: totalReach,
       })
     } else {
       // No posts yet - show zeros
@@ -107,7 +113,7 @@ export default function DashboardPage() {
         weeklyGoal: 7,
         currentWeekPosts: 0,
         engagementRate: 0,
-        reachIncrease: 0,
+        totalReach: 0,
       })
     }
 
@@ -117,6 +123,29 @@ export default function DashboardPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
+  }
+
+  const handleSyncAnalytics = async () => {
+    setSyncingAnalytics(true)
+    try {
+      const response = await fetch('/api/sync-linkedin-analytics', {
+        method: 'POST'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`✅ Synced ${data.synced} posts with LinkedIn analytics!`)
+        // Refresh stats
+        fetchStats()
+      } else {
+        alert(data.message || data.error || 'Failed to sync analytics')
+      }
+    } catch (error) {
+      console.error('Sync error:', error)
+      alert('Failed to sync analytics. Please try again.')
+    } finally {
+      setSyncingAnalytics(false)
+    }
   }
 
   if (loading) {
@@ -207,17 +236,36 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">{stats.reachIncrease > 0 ? 'Active' : 'Start'}</span>
+              <button
+                onClick={handleSyncAnalytics}
+                disabled={syncingAnalytics}
+                className="text-xs font-medium bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition disabled:opacity-50 flex items-center space-x-1"
+                title="Sync with LinkedIn"
+              >
+                {syncingAnalytics ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Sync</span>
+                  </>
+                )}
+              </button>
             </div>
-            {stats.reachIncrease > 0 ? (
+            {stats.totalReach > 0 ? (
               <>
-                <div className="text-3xl font-bold mb-1">{stats.reachIncrease.toLocaleString()}</div>
-                <p className="text-green-100 text-sm">Total Reach</p>
+                <div className="text-3xl font-bold mb-1">{stats.totalReach.toLocaleString()}</div>
+                <p className="text-green-100 text-sm">Total Reach (Real Data)</p>
               </>
             ) : (
               <>
                 <div className="text-2xl font-bold mb-1">No data yet</div>
-                <p className="text-green-100 text-sm">Publish posts to track reach</p>
+                <p className="text-green-100 text-sm">Click Sync to fetch LinkedIn data</p>
               </>
             )}
           </div>
@@ -234,12 +282,12 @@ export default function DashboardPage() {
             {stats.engagementRate > 0 ? (
               <>
                 <div className="text-3xl font-bold mb-1">{stats.engagementRate}%</div>
-                <p className="text-purple-100 text-sm">Engagement Rate</p>
+                <p className="text-purple-100 text-sm">Engagement Rate (Real Data)</p>
               </>
             ) : (
               <>
                 <div className="text-2xl font-bold mb-1">No data yet</div>
-                <p className="text-purple-100 text-sm">Publish posts to track engagement</p>
+                <p className="text-purple-100 text-sm">Click Sync to fetch LinkedIn data</p>
               </>
             )}
           </div>

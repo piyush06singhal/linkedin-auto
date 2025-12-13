@@ -134,13 +134,22 @@ export async function POST(request: Request) {
 
     const categoryFilter = category && category !== 'All' ? ` in the "${category}" category` : ''
     
-    const prompt = `Generate ${count} LinkedIn post ideas${categoryFilter}. Return ONLY valid JSON array, no other text.
+    // Add timestamp to ensure unique ideas each time
+    const timestamp = Date.now()
+    
+    const prompt = `Generate ${count} UNIQUE and CREATIVE LinkedIn post ideas${categoryFilter}. 
+
+IMPORTANT: Make each idea completely different and original. Avoid generic or repetitive topics.
+
+Current timestamp: ${timestamp} (use this to ensure variety)
+
+Return ONLY valid JSON array, no other text.
 
 Format (MUST be valid JSON):
 [
   {
-    "title": "Post title here",
-    "description": "Brief description",
+    "title": "Specific, unique post title",
+    "description": "Detailed description of what the post would cover",
     "category": "Thought Leadership",
     "difficulty": "Easy",
     "engagement": "High",
@@ -151,6 +160,8 @@ Format (MUST be valid JSON):
 Categories: Thought Leadership, Personal Story, Industry News, Tips & Tricks, Career Advice, Trending Topics
 Difficulty: Easy, Medium, Hard
 Engagement: Medium, High, Very High
+
+Make each idea fresh, specific, and actionable. Avoid clichés.
 
 Return ONLY the JSON array, nothing else:`
 

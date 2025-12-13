@@ -328,9 +328,12 @@ CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
    - Include specific examples or insights related to the topic
    - End with a clear call-to-action or thought-provoking question`
 
-    if (includeEmojis) {
-      prompt += '\n7. Use 2-3 relevant emojis strategically (at the start or to emphasize key points)'
-    }
+    // Always include emojis for better engagement
+    prompt += '\n7. Use 3-5 relevant emojis throughout the post:'
+    prompt += '\n   - Add 1-2 emojis at the very beginning to grab attention'
+    prompt += '\n   - Sprinkle 2-3 emojis within the content to emphasize key points'
+    prompt += '\n   - Choose emojis that match the topic and tone'
+    prompt += '\n   - Examples: 💡 for ideas, 🚀 for growth, 💪 for motivation, 📊 for data, ✨ for success'
 
     if (includeHashtags) {
       prompt += '\n8. End with 3-5 highly relevant hashtags that match the specific topic'

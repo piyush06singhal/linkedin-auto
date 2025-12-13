@@ -65,8 +65,19 @@ export default function ContentIdeasPage() {
 
       console.log('✅ Received', data.ideas.length, 'ideas from AI')
       
-      // Add new ideas to existing ones (unlimited)
-      setIdeas(prevIdeas => [...prevIdeas, ...data.ideas])
+      // Filter out duplicate ideas based on title similarity
+      setIdeas(prevIdeas => {
+        const existingTitles = new Set(prevIdeas.map(idea => idea.title.toLowerCase().trim()))
+        const newUniqueIdeas = data.ideas.filter((idea: ContentIdea) => 
+          !existingTitles.has(idea.title.toLowerCase().trim())
+        )
+        
+        if (newUniqueIdeas.length < data.ideas.length) {
+          console.log(`⚠️ Filtered out ${data.ideas.length - newUniqueIdeas.length} duplicate ideas`)
+        }
+        
+        return [...prevIdeas, ...newUniqueIdeas]
+      })
       
       // Set a 5 second cooldown after successful generation to avoid rate limits
       setCooldown(5)

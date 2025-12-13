@@ -117,7 +117,43 @@ export async function POST(
 
     console.log('✅ Invitation created successfully:', invitation.id)
 
-    // TODO: Send email notification
+    // Get workspace details for email
+    const { data: workspaceDetails } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', params.id)
+      .single()
+
+    // Get inviter details for email
+    const { data: inviterData } = await supabase
+      .from('users')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single()
+
+    // Send email notification
+    try {
+      const { sendWorkspaceInviteEmail } = await import('@/lib/email/workspace-invites')
+      
+      const emailResult = await sendWorkspaceInviteEmail({
+        inviteeEmail: email.trim().toLowerCase(),
+        inviterName: inviterData?.full_name || inviterData?.email || 'A team member',
+        workspaceName: workspaceDetails?.name || 'Workspace',
+        workspaceId: params.id,
+        role: role,
+        invitationId: invitation.id
+      })
+
+      if (emailResult.success) {
+        console.log('✅ Invitation email sent successfully')
+      } else {
+        console.warn('⚠️ Email sending failed:', emailResult.error)
+        // Don't fail the invitation if email fails
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending invitation email:', emailError)
+      // Don't fail the invitation if email fails
+    }
 
     return NextResponse.json({ success: true, invitation })
 
