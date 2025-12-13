@@ -90,7 +90,9 @@ export class GeminiClient {
     // Clean old cache entries (keep max 50 entries)
     if (contentCache.size > 50) {
       const oldestKey = contentCache.keys().next().value
-      contentCache.delete(oldestKey)
+      if (oldestKey) {
+        contentCache.delete(oldestKey)
+      }
     }
   }
 
