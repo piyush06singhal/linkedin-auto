@@ -26,7 +26,33 @@ export default function DashboardPage() {
   useEffect(() => {
     checkUser()
     fetchStats()
+    // Auto-sync analytics on first load if user has published posts but no analytics data
+    autoSyncIfNeeded()
   }, [])
+
+  const autoSyncIfNeeded = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    // Check if user has published posts
+    const { data: publishedPosts } = await supabase
+      .from('posts')
+      .select('id, reach, linkedin_post_id')
+      .eq('user_id', user.id)
+      .eq('status', 'published')
+      .not('linkedin_post_id', 'is', null)
+      .limit(1)
+
+    // If user has published posts but no analytics data, auto-sync
+    if (publishedPosts && publishedPosts.length > 0) {
+      const hasAnalytics = publishedPosts.some(p => p.reach && p.reach > 0)
+      if (!hasAnalytics) {
+        console.log('🔄 Auto-syncing LinkedIn analytics...')
+        // Don't await, let it run in background
+        handleSyncAnalytics()
+      }
+    }
+  }
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -260,12 +286,17 @@ export default function DashboardPage() {
             {stats.totalReach > 0 ? (
               <>
                 <div className="text-3xl font-bold mb-1">{stats.totalReach.toLocaleString()}</div>
-                <p className="text-green-100 text-sm">Total Reach (Real Data)</p>
+                <p className="text-green-100 text-sm">Total Impressions</p>
+                <p className="text-green-200 text-xs mt-1">From {stats.published} published posts</p>
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold mb-1">No data yet</div>
-                <p className="text-green-100 text-sm">Click Sync to fetch LinkedIn data</p>
+                <div className="text-2xl font-bold mb-1">
+                  {syncingAnalytics ? 'Syncing...' : 'No data yet'}
+                </div>
+                <p className="text-green-100 text-sm">
+                  {stats.published > 0 ? 'Click Sync to fetch data' : 'Publish posts to track reach'}
+                </p>
               </>
             )}
           </div>
@@ -282,12 +313,17 @@ export default function DashboardPage() {
             {stats.engagementRate > 0 ? (
               <>
                 <div className="text-3xl font-bold mb-1">{stats.engagementRate}%</div>
-                <p className="text-purple-100 text-sm">Engagement Rate (Real Data)</p>
+                <p className="text-purple-100 text-sm">Avg Engagement Rate</p>
+                <p className="text-purple-200 text-xs mt-1">Likes + Comments + Shares</p>
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold mb-1">No data yet</div>
-                <p className="text-purple-100 text-sm">Click Sync to fetch LinkedIn data</p>
+                <div className="text-2xl font-bold mb-1">
+                  {syncingAnalytics ? 'Syncing...' : 'No data yet'}
+                </div>
+                <p className="text-purple-100 text-sm">
+                  {stats.published > 0 ? 'Click Sync to fetch data' : 'Publish posts to track engagement'}
+                </p>
               </>
             )}
           </div>

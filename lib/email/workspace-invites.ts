@@ -147,7 +147,7 @@ LinkedAI - AI-Powered LinkedIn Automation
     }
 
     const result = await resend.emails.send({
-      from: 'LinkedAI <noreply@linkedai.app>', // Update with your verified domain
+      from: 'LinkedAI <onboarding@resend.dev>', // Using Resend's test domain - works without verification
       to: inviteeEmail,
       subject: subject,
       html: htmlContent,
