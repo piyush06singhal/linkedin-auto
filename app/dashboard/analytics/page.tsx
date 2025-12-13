@@ -374,13 +374,21 @@ export default function AnalyticsPage() {
               <div className="h-64 flex items-end justify-between space-x-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const count = analytics.postsByDay[day] || 0
+                  // Calculate height: minimum 8% for any post, scale up to 100% for max
+                  const heightPercent = count === 0 ? 0 : Math.max(8, (count / maxPostsByDay) * 100)
                   return (
                     <div key={day} className="flex-1 flex flex-col items-center">
                       <div
-                        className="w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${maxPostsByDay > 0 ? (count / maxPostsByDay) * 100 : 0}%`, minHeight: count > 0 ? '20px' : '0' }}
+                        className="w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all hover:opacity-80 cursor-pointer relative group"
+                        style={{ height: `${heightPercent}%` }}
                         title={`${count} posts`}
-                      ></div>
+                      >
+                        {count > 0 && (
+                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                            {count} {count === 1 ? 'post' : 'posts'}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-600 mt-3 font-medium">{day}</span>
                       <span className="text-xs text-gray-400">{count}</span>
                     </div>
@@ -395,13 +403,21 @@ export default function AnalyticsPage() {
               <div className="h-64 flex items-end justify-between space-x-2">
                 {Object.entries(analytics.postsByMonth).map(([month, count]) => {
                   const monthLabel = month.split(' ')[0] // Just show month name
+                  // Calculate height: minimum 8% for any post, scale up to 100% for max
+                  const heightPercent = count === 0 ? 0 : Math.max(8, (count / maxPostsByMonth) * 100)
                   return (
                     <div key={month} className="flex-1 flex flex-col items-center">
                       <div
-                        className="w-full bg-gradient-to-t from-green-500 to-green-600 rounded-t-xl transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${maxPostsByMonth > 0 ? (count / maxPostsByMonth) * 100 : 0}%`, minHeight: count > 0 ? '20px' : '0' }}
+                        className="w-full bg-gradient-to-t from-green-500 to-green-600 rounded-t-xl transition-all hover:opacity-80 cursor-pointer relative group"
+                        style={{ height: `${heightPercent}%` }}
                         title={`${month}: ${count} posts`}
-                      ></div>
+                      >
+                        {count > 0 && (
+                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                            {count} {count === 1 ? 'post' : 'posts'}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-600 mt-3 font-medium text-center">{monthLabel}</span>
                       <span className="text-xs text-gray-400">{count}</span>
                     </div>
