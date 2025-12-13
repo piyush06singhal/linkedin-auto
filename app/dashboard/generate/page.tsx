@@ -13,7 +13,7 @@ export default function GeneratePage() {
   const [targetAudience, setTargetAudience] = useState('')
   const [description, setDescription] = useState('')
   const [tone, setTone] = useState('professional')
-  const [numberOfPosts, setNumberOfPosts] = useState(7)
+  const [numberOfPosts, setNumberOfPosts] = useState(1)
   const [generatedPosts, setGeneratedPosts] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -47,6 +47,8 @@ export default function GeneratePage() {
     setError('')
     setGeneratedPosts([])
 
+    console.log('🚀 Starting generation process...')
+
     try {
       const topic = description || `${mainTopic}${niche ? ` - ${niche}` : ''}${targetAudience ? ` for ${targetAudience}` : ''}`
       
@@ -79,11 +81,25 @@ export default function GeneratePage() {
         
         console.log('📤 Request Body:', JSON.stringify(requestBody, null, 2))
         
-        const response = await fetch('/api/generate-post', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody),
-        })
+        // Add timeout to prevent infinite loading
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+        
+        try {
+          var response = await fetch('/api/generate-post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
+          })
+        } catch (fetchError: any) {
+          if (fetchError.name === 'AbortError') {
+            throw new Error('Request timed out after 30 seconds. Please try again with a simpler topic.')
+          }
+          throw fetchError
+        } finally {
+          clearTimeout(timeoutId)
+        }
 
         const data = await response.json()
         
@@ -103,18 +119,21 @@ export default function GeneratePage() {
         // Update UI progressively as posts are generated
         setGeneratedPosts([...posts])
         
-        // Delay between requests to avoid rate limiting (4 seconds to stay under 15/min)
+        // Delay between requests to avoid rate limiting (2 seconds for better UX)
         if (i < numberOfPosts - 1) {
-          console.log(`⏳ Waiting 4 seconds before next request to avoid rate limits...`)
-          await new Promise(resolve => setTimeout(resolve, 4000))
+          console.log(`⏳ Waiting 2 seconds before next request to avoid rate limits...`)
+          await new Promise(resolve => setTimeout(resolve, 2000))
         }
       }
       
       setGeneratedPosts(posts)
+      console.log('✅ All posts generated successfully!')
     } catch (err: any) {
-      setError(err.message)
+      console.error('❌ Generation failed:', err)
+      setError(err.message || 'An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
+      console.log('🏁 Generation process completed')
     }
   }
 
