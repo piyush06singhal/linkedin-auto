@@ -103,9 +103,10 @@ export default function GeneratePage() {
         // Update UI progressively as posts are generated
         setGeneratedPosts([...posts])
         
-        // Small delay between requests to avoid rate limiting
+        // Delay between requests to avoid rate limiting (4 seconds to stay under 15/min)
         if (i < numberOfPosts - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500))
+          console.log(`⏳ Waiting 4 seconds before next request to avoid rate limits...`)
+          await new Promise(resolve => setTimeout(resolve, 4000))
         }
       }
       
@@ -263,8 +264,26 @@ export default function GeneratePage() {
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-                {error}
+              <div className="mb-6 p-6 bg-red-50 border-2 border-red-200 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-red-900 mb-2">Generation Error</h4>
+                    <p className="text-red-700 text-sm whitespace-pre-line">{error}</p>
+                    {error.includes('Rate limit') || error.includes('quota') ? (
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-sm text-yellow-800">
+                          <strong>💡 Tips:</strong><br/>
+                          • Wait 60 seconds and try again<br/>
+                          • Reduce number of posts to generate<br/>
+                          • Consider upgrading your API key for higher limits
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             )}
 

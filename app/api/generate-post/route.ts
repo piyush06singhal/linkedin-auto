@@ -86,18 +86,34 @@ export async function POST(request: Request) {
     
     // Provide user-friendly error messages
     let errorMessage = error.message || 'Failed to generate content'
+    let statusCode = 500
     
-    if (error.message.includes('overloaded')) {
-      errorMessage = 'The AI service is currently busy. Please try again in a few seconds.'
+    // Check for rate limit errors
+    if (error.message.includes('quota') || 
+        error.message.includes('exceeded') || 
+        error.message.includes('Rate limit')) {
+      statusCode = 429
+      errorMessage = error.message // Use the enhanced error message from GeminiClient
+    } else if (error.message.includes('overloaded')) {
+      statusCode = 503
+      errorMessage = '⚠️ AI service is temporarily overloaded. Please try again in a few seconds.'
     } else if (error.message.includes('rate limit') || error.message.includes('429')) {
-      errorMessage = 'Too many requests. Please wait a moment and try again.'
+      statusCode = 429
+      errorMessage = '⚠️ Too many requests. Please wait 60 seconds and try again.'
     } else if (error.message.includes('API key')) {
-      errorMessage = 'API configuration error. Please contact support.'
+      statusCode = 500
+      errorMessage = '❌ API configuration error. Please contact support.'
+    } else if (error.message.includes('blocked') || error.message.includes('SAFETY')) {
+      statusCode = 400
+      errorMessage = '⚠️ Content was blocked by AI safety filters. Please try a different topic or tone.'
     }
     
     return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        retryable: statusCode === 429 || statusCode === 503
+      },
+      { status: statusCode }
     )
   }
 }

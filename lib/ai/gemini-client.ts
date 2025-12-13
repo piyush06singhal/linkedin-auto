@@ -12,6 +12,28 @@ export interface GeneratePostOptions {
   includeEmojis?: boolean
 }
 
+// Simple in-memory cache for generated content
+interface CacheEntry {
+  content: string
+  timestamp: number
+}
+
+const contentCache = new Map<string, CacheEntry>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+// Rate limiting tracker
+interface RateLimitInfo {
+  requestCount: number
+  resetTime: number
+  isLimited: boolean
+}
+
+const rateLimitInfo: RateLimitInfo = {
+  requestCount: 0,
+  resetTime: Date.now() + 60000, // Reset every minute
+  isLimited: false
+}
+
 export class GeminiClient {
   private apiKey: string
 
@@ -19,34 +41,133 @@ export class GeminiClient {
     this.apiKey = apiKey
   }
 
+  // Check and update rate limit
+  private checkRateLimit(): { allowed: boolean; waitTime?: number } {
+    const now = Date.now()
+    
+    // Reset counter if time window has passed
+    if (now >= rateLimitInfo.resetTime) {
+      rateLimitInfo.requestCount = 0
+      rateLimitInfo.resetTime = now + 60000
+      rateLimitInfo.isLimited = false
+    }
+    
+    // Free tier limit is 20 requests per minute, we'll be conservative with 15
+    const MAX_REQUESTS_PER_MINUTE = 15
+    
+    if (rateLimitInfo.requestCount >= MAX_REQUESTS_PER_MINUTE) {
+      const waitTime = rateLimitInfo.resetTime - now
+      rateLimitInfo.isLimited = true
+      return { allowed: false, waitTime }
+    }
+    
+    rateLimitInfo.requestCount++
+    return { allowed: true }
+  }
+
+  // Get cached content if available
+  private getCachedContent(cacheKey: string): string | null {
+    const cached = contentCache.get(cacheKey)
+    if (!cached) return null
+    
+    const now = Date.now()
+    if (now - cached.timestamp > CACHE_DURATION) {
+      contentCache.delete(cacheKey)
+      return null
+    }
+    
+    console.log('✅ Using cached content for:', cacheKey)
+    return cached.content
+  }
+
+  // Cache generated content
+  private cacheContent(cacheKey: string, content: string): void {
+    contentCache.set(cacheKey, {
+      content,
+      timestamp: Date.now()
+    })
+    
+    // Clean old cache entries (keep max 50 entries)
+    if (contentCache.size > 50) {
+      const oldestKey = contentCache.keys().next().value
+      contentCache.delete(oldestKey)
+    }
+  }
+
   // Helper method to retry API calls with exponential backoff
   private async retryWithBackoff<T>(
     fn: () => Promise<T>,
     maxRetries: number = 3,
-    initialDelay: number = 1000
+    initialDelay: number = 2000
   ): Promise<T> {
     let lastError: any
     
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
+        // Check rate limit before making request
+        const rateLimitCheck = this.checkRateLimit()
+        if (!rateLimitCheck.allowed) {
+          const waitSeconds = Math.ceil((rateLimitCheck.waitTime || 0) / 1000)
+          throw new Error(
+            `Rate limit reached. Please wait ${waitSeconds} seconds before trying again. ` +
+            `Free tier allows 15 requests per minute. Consider upgrading your API key for higher limits.`
+          )
+        }
+        
         return await fn()
       } catch (error: any) {
         lastError = error
         
+        // Parse rate limit error from API response
+        let retryAfterSeconds = 0
+        if (error.message.includes('retry in')) {
+          const match = error.message.match(/retry in ([\d.]+)s/)
+          if (match) {
+            retryAfterSeconds = Math.ceil(parseFloat(match[1]))
+          }
+        }
+        
         // Check if error is retryable (rate limit, overload, etc.)
-        const isRetryable = 
-          error.message.includes('overloaded') ||
+        const isRateLimitError = 
+          error.message.includes('quota') ||
+          error.message.includes('exceeded') ||
           error.message.includes('429') ||
-          error.message.includes('503') ||
           error.message.includes('rate limit')
         
+        const isRetryable = 
+          isRateLimitError ||
+          error.message.includes('overloaded') ||
+          error.message.includes('503') ||
+          error.message.includes('temporarily unavailable')
+        
+        // Don't retry on last attempt or non-retryable errors
         if (!isRetryable || attempt === maxRetries - 1) {
+          // Enhance error message for rate limits
+          if (isRateLimitError) {
+            const enhancedMessage = 
+              `⚠️ API Rate Limit Exceeded\n\n` +
+              `Your Gemini API key has reached its free tier limit (20 requests/minute).\n\n` +
+              `Solutions:\n` +
+              `1. Wait ${retryAfterSeconds || 60} seconds and try again\n` +
+              `2. Upgrade to paid tier at https://ai.google.dev/pricing\n` +
+              `3. The app will automatically retry in a moment\n\n` +
+              `Original error: ${error.message}`
+            throw new Error(enhancedMessage)
+          }
           throw error
         }
         
-        // Exponential backoff: wait longer each time
-        const delay = initialDelay * Math.pow(2, attempt)
-        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`)
+        // Calculate delay with exponential backoff
+        let delay = initialDelay * Math.pow(2, attempt)
+        
+        // If API provided retry-after time, use that
+        if (retryAfterSeconds > 0) {
+          delay = Math.max(delay, retryAfterSeconds * 1000)
+        }
+        
+        console.log(`⏳ Retry attempt ${attempt + 1}/${maxRetries} after ${Math.ceil(delay/1000)}s...`)
+        console.log(`   Reason: ${error.message.substring(0, 100)}`)
+        
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
@@ -64,9 +185,18 @@ export class GeminiClient {
       includeEmojis = false,
     } = options
 
+    // Create cache key from options
+    const cacheKey = `post:${topic}:${tone}:${length}:${includeHashtags}:${includeEmojis}`
+    
+    // Check cache first
+    const cached = this.getCachedContent(cacheKey)
+    if (cached) {
+      return cached
+    }
+
     const prompt = this.buildPrompt(topic, tone, length, includeHashtags, includeEmojis)
 
-    return this.retryWithBackoff(async () => {
+    const result = await this.retryWithBackoff(async () => {
       const response = await fetch(
         `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
         {
@@ -179,6 +309,11 @@ export class GeminiClient {
       
       return generatedText.trim()
     })
+    
+    // Cache the result
+    this.cacheContent(cacheKey, result)
+    
+    return result
   }
 
   // Generate multiple post variations
