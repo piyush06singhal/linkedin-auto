@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import Sidebar from '@/components/Sidebar'
+import DashboardLayout from '@/components/DashboardLayout'
 
 interface Template {
   id: string
@@ -195,12 +195,8 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-gray-50">
-        <div className="max-w-7xl mx-auto p-8">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto p-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-4 mb-6">
@@ -404,6 +400,7 @@ export default function TemplatesPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

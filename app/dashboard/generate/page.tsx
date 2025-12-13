@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Sidebar from '@/components/Sidebar'
+import DashboardLayout from '@/components/DashboardLayout'
 
 export default function GeneratePage() {
   const router = useRouter()
@@ -137,12 +137,8 @@ export default function GeneratePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-5xl mx-auto p-8">
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto p-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
@@ -355,7 +351,6 @@ export default function GeneratePage() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   )
 }
