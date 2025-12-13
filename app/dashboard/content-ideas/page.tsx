@@ -374,7 +374,6 @@ export default function ContentIdeasPage() {
             </div>
           </div>
         </div>
-      </main>
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (

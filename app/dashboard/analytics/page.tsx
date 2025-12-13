@@ -535,7 +535,6 @@ export default function AnalyticsPage() {
             </div>
           </div>
         </div>
-      </main>
 
       {/* Logout Modal */}
       {showLogoutModal && (

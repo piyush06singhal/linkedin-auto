@@ -328,7 +328,6 @@ export default function DraftsPage() {
             </div>
           )}
         </div>
-      </main>
 
       {/* Edit Modal */}
       {selectedDraft && (
