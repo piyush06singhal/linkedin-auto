@@ -406,7 +406,6 @@ export default function ContentIdeasPage() {
           </div>
         </div>
       )}
-      </div>
     </DashboardLayout>
   )
 }

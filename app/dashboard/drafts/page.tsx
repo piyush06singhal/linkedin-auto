@@ -368,7 +368,6 @@ export default function DraftsPage() {
           </div>
         </div>
       )}
-      </div>
     </DashboardLayout>
   )
 }

@@ -567,7 +567,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       )}
-      </div>
     </DashboardLayout>
   )
 }

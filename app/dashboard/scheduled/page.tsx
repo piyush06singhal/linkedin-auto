@@ -384,7 +384,6 @@ export default function ScheduledPage() {
             </div>
           )}
         </div>
-      </div>
     </DashboardLayout>
   )
 }
