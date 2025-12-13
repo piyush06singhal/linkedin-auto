@@ -14,94 +14,141 @@ export class ImageGenerator {
     this.geminiApiKey = geminiApiKey
   }
 
-  // Generate image using AI with Gemini-enhanced prompts
+  // Generate image using Gemini Imagen 3 (Nano Banana)
   async generateImage(options: ImageGenerationOptions): Promise<string> {
     const { prompt, style = 'professional', aspectRatio = '1:1' } = options
     
-    console.log('🎨 Generating AI image with prompt:', prompt)
+    console.log('🎨 Generating AI image with Gemini Imagen 3')
+    console.log('📝 Prompt:', prompt)
 
-    // Determine image dimensions based on aspect ratio
+    if (!this.geminiApiKey) {
+      console.error('❌ GEMINI_API_KEY not configured')
+      return this.getFallbackImage(prompt, style, aspectRatio)
+    }
+
+    try {
+      // Build enhanced prompt with style
+      const styleDescriptions = {
+        professional: 'professional, corporate, business-like, clean, modern, high-quality, LinkedIn-appropriate',
+        creative: 'creative, artistic, colorful, innovative, unique, eye-catching, imaginative',
+        minimal: 'minimal, clean, simple, elegant, modern, uncluttered, sophisticated',
+        vibrant: 'vibrant, colorful, energetic, dynamic, bold, striking, lively',
+      }
+
+      const enhancedPrompt = `${prompt}. Style: ${styleDescriptions[style]}. High quality, professional photography, 4K resolution.`
+      
+      console.log('🎨 Enhanced prompt:', enhancedPrompt)
+
+      // Use Gemini Imagen 3 API
+      // Note: This uses the REST API directly since the SDK doesn't support image generation yet
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${this.geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            instances: [
+              {
+                prompt: enhancedPrompt,
+              }
+            ],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: aspectRatio,
+              safetyFilterLevel: 'block_some',
+              personGeneration: 'allow_adult',
+            }
+          })
+        }
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ Gemini Imagen API error:', response.status, errorText)
+        throw new Error(`Gemini Imagen API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
+        // Convert base64 to data URL
+        const base64Image = data.predictions[0].bytesBase64Encoded
+        const imageUrl = `data:image/png;base64,${base64Image}`
+        
+        console.log('✅ Image generated successfully with Gemini Imagen 3')
+        return imageUrl
+      } else {
+        console.error('❌ Unexpected response format:', data)
+        throw new Error('Invalid response from Gemini Imagen API')
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Gemini Imagen generation error:', error)
+      
+      // Fallback to Pollinations.ai
+      console.log('⚠️ Falling back to Pollinations.ai')
+      return this.generateWithPollinations(prompt, style, aspectRatio)
+    }
+  }
+
+  // Fallback: Generate with Pollinations.ai
+  private async generateWithPollinations(
+    prompt: string, 
+    style: string, 
+    aspectRatio: string
+  ): Promise<string> {
+    try {
+      const dimensions = {
+        '1:1': { width: 1024, height: 1024 },
+        '16:9': { width: 1920, height: 1080 },
+        '4:5': { width: 1024, height: 1280 },
+      }
+      
+      const { width, height } = dimensions[aspectRatio as keyof typeof dimensions]
+      
+      const styleKeywords = {
+        professional: 'professional corporate business',
+        creative: 'creative artistic colorful',
+        minimal: 'minimal clean simple',
+        vibrant: 'vibrant colorful energetic',
+      }
+      
+      const enhancedPrompt = `${prompt}, ${styleKeywords[style as keyof typeof styleKeywords]}`
+      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=${width}&height=${height}&nologo=true&enhance=true`
+      
+      console.log('🎨 Using Pollinations.ai fallback')
+      return pollinationsUrl
+      
+    } catch (error) {
+      console.error('❌ Pollinations.ai error:', error)
+      return this.getFallbackImage(prompt, style, aspectRatio)
+    }
+  }
+
+  // Final fallback: Placeholder image
+  private getFallbackImage(prompt: string, style: string, aspectRatio: string): string {
     const dimensions = {
       '1:1': { width: 1024, height: 1024 },
       '16:9': { width: 1920, height: 1080 },
       '4:5': { width: 1024, height: 1280 },
     }
     
-    const { width, height } = dimensions[aspectRatio]
-
-    try {
-      // Step 1: Use Gemini to enhance the prompt for better image generation
-      let enhancedPrompt = prompt
-      
-      if (this.geminiApiKey) {
-        try {
-          console.log('🤖 Using Gemini to enhance image prompt...')
-          const genAI = new GoogleGenerativeAI(this.geminiApiKey)
-          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
-          
-          const styleDescriptions = {
-            professional: 'professional, corporate, business-like, clean, modern, high-quality',
-            creative: 'creative, artistic, colorful, innovative, unique, eye-catching',
-            minimal: 'minimal, clean, simple, elegant, modern, uncluttered',
-            vibrant: 'vibrant, colorful, energetic, dynamic, bold, striking',
-          }
-          
-          const promptEnhancementRequest = `Create a detailed image generation prompt for: "${prompt}"
-
-Style: ${style} (${styleDescriptions[style]})
-Context: This is for a LinkedIn post image
-
-Requirements:
-- Make it specific and detailed
-- Include visual elements, colors, composition
-- Keep it under 100 words
-- Focus on ${style} aesthetic
-- Make it suitable for professional social media
-
-Return ONLY the enhanced prompt, nothing else.`
-
-          const result = await model.generateContent(promptEnhancementRequest)
-          enhancedPrompt = result.response.text().trim()
-          console.log('✅ Enhanced prompt:', enhancedPrompt)
-        } catch (geminiError) {
-          console.error('⚠️ Gemini enhancement failed, using original prompt:', geminiError)
-        }
-      }
-
-      // Step 2: Generate image using Pollinations.ai (free AI image generation)
-      // Pollinations.ai is a free service that generates images using Stable Diffusion
-      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=${width}&height=${height}&nologo=true&enhance=true`
-      
-      console.log('🎨 Generating image with Pollinations.ai')
-      console.log('📐 Dimensions:', `${width}x${height}`)
-      
-      // Test if the URL is accessible
-      const testResponse = await fetch(pollinationsUrl, { method: 'HEAD' })
-      
-      if (testResponse.ok) {
-        console.log('✅ AI image generated successfully')
-        return pollinationsUrl
-      } else {
-        throw new Error('Pollinations.ai service unavailable')
-      }
-      
-    } catch (error) {
-      console.error('❌ AI image generation error:', error)
-      
-      // Fallback: Use a gradient placeholder with the prompt text
-      const colors = {
-        professional: '0A66C2/FFFFFF',
-        creative: 'FF6B6B/FFFFFF',
-        minimal: '2C3E50/FFFFFF',
-        vibrant: 'FF6B35/FFFFFF',
-      }
-      
-      const colorScheme = colors[style]
-      const text = prompt.substring(0, 50).replace(/[^a-zA-Z0-9 ]/g, '')
-      
-      console.log('⚠️ Using fallback placeholder image')
-      return `https://placehold.co/${width}x${height}/${colorScheme.replace('/', '/').split('/')[0]}/${colorScheme.split('/')[1]}/png?text=${encodeURIComponent(text)}`
+    const { width, height } = dimensions[aspectRatio as keyof typeof dimensions]
+    
+    const colors = {
+      professional: '0A66C2/FFFFFF',
+      creative: 'FF6B6B/FFFFFF',
+      minimal: '2C3E50/FFFFFF',
+      vibrant: 'FF6B35/FFFFFF',
     }
+    
+    const colorScheme = colors[style as keyof typeof colors]
+    const text = prompt.substring(0, 50).replace(/[^a-zA-Z0-9 ]/g, '')
+    
+    console.log('⚠️ Using placeholder fallback')
+    return `https://placehold.co/${width}x${height}/${colorScheme.split('/')[0]}/${colorScheme.split('/')[1]}/png?text=${encodeURIComponent(text)}`
   }
 
   // Generate multiple variations
@@ -131,12 +178,13 @@ Return ONLY the enhanced prompt, nothing else.`
 }
 
 export function createImageGenerator(): ImageGenerator {
-  // Use Gemini API Key for prompt enhancement
-  const geminiApiKey = process.env.GEMINI_API_KEY || ''
+  // Use Gemini API Key for Imagen 3 image generation
+  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || ''
   
   console.log('🖼️ Creating AI ImageGenerator')
-  console.log('🤖 Gemini API Status:', geminiApiKey ? '✅ Configured' : '⚠️ Not configured (will use basic prompts)')
-  console.log('🎨 Using Pollinations.ai for free AI image generation')
+  console.log('🤖 Gemini Imagen 3 Status:', geminiApiKey ? '✅ Configured' : '❌ Not configured')
+  console.log('🎨 Using Gemini Imagen 3 (Nano Banana) for AI image generation')
+  console.log('🔄 Fallback: Pollinations.ai if Gemini fails')
   
   return new ImageGenerator(geminiApiKey)
 }
