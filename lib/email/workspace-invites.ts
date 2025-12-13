@@ -155,7 +155,7 @@ LinkedAI - AI-Powered LinkedIn Automation
     })
 
     console.log('✅ Email sent successfully:', result)
-    return { success: true, messageId: result.id }
+    return { success: true, messageId: result.data?.id || 'sent' }
     
   } catch (error: any) {
     console.error('❌ Failed to send email:', error)
