@@ -1,4 +1,5 @@
 // Image generation for LinkedIn posts using AI
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export interface ImageGenerationOptions {
   prompt: string
@@ -7,98 +8,87 @@ export interface ImageGenerationOptions {
 }
 
 export class ImageGenerator {
-  private apiKey: string
+  private geminiApiKey: string
 
-  constructor(apiKey: string = '') {
-    this.apiKey = apiKey // Reserved for future Unsplash API key usage
+  constructor(geminiApiKey: string = '') {
+    this.geminiApiKey = geminiApiKey
   }
 
-  // Generate image using AI (Unsplash for stock photos as fallback)
+  // Generate image using AI with Gemini-enhanced prompts
   async generateImage(options: ImageGenerationOptions): Promise<string> {
     const { prompt, style = 'professional', aspectRatio = '1:1' } = options
     
-    console.log('🎨 Generating image with prompt:', prompt)
+    console.log('🎨 Generating AI image with prompt:', prompt)
 
-    // Enhanced prompt based on style - more specific keywords for better results
-    const styleKeywords = {
-      professional: 'business professional corporate workplace',
-      creative: 'creative artistic colorful innovative design',
-      minimal: 'minimal clean simple modern elegant',
-      vibrant: 'vibrant colorful energetic dynamic bold',
-    }
-
-    // Build a more intelligent search query
-    // Extract key nouns and concepts from the prompt
-    const cleanPrompt = prompt.toLowerCase().trim()
-    const searchQuery = `${cleanPrompt} ${styleKeywords[style]}`
-    
     // Determine image dimensions based on aspect ratio
     const dimensions = {
-      '1:1': { width: 1080, height: 1080 },
+      '1:1': { width: 1024, height: 1024 },
       '16:9': { width: 1920, height: 1080 },
-      '4:5': { width: 1080, height: 1350 },
+      '4:5': { width: 1024, height: 1280 },
     }
     
     const { width, height } = dimensions[aspectRatio]
 
     try {
-      // Use official Unsplash API with your access key
-      if (this.apiKey && this.apiKey.length > 10) {
-        console.log('🎨 Using Unsplash API for AI-powered image search')
-        console.log('Search query:', searchQuery)
-        
-        const orientation = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '4:5' ? 'portrait' : 'squarish'
-        
-        // Use Unsplash Search API for better relevance
-        const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&orientation=${orientation}&per_page=10&client_id=${this.apiKey}`
-        
-        const searchResponse = await fetch(searchUrl)
-        
-        if (searchResponse.ok) {
-          const searchData = await searchResponse.json()
+      // Step 1: Use Gemini to enhance the prompt for better image generation
+      let enhancedPrompt = prompt
+      
+      if (this.geminiApiKey) {
+        try {
+          console.log('🤖 Using Gemini to enhance image prompt...')
+          const genAI = new GoogleGenerativeAI(this.geminiApiKey)
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
           
-          if (searchData.results && searchData.results.length > 0) {
-            // Get a random image from top 10 results for variety
-            const randomIndex = Math.floor(Math.random() * Math.min(searchData.results.length, 10))
-            const selectedImage = searchData.results[randomIndex]
-            
-            console.log('✅ Found relevant image:', selectedImage.alt_description || selectedImage.description)
-            console.log('📸 Image by:', selectedImage.user.name)
-            
-            // Return high-quality image URL
-            return selectedImage.urls.regular || selectedImage.urls.full
-          } else {
-            console.log('⚠️ No results found for query, trying fallback search')
-            
-            // Fallback: Try with just the main prompt without style keywords
-            const fallbackUrl = `https://api.unsplash.com/photos/random?query=${encodeURIComponent(cleanPrompt)}&orientation=${orientation}&client_id=${this.apiKey}`
-            const fallbackResponse = await fetch(fallbackUrl)
-            
-            if (fallbackResponse.ok) {
-              const fallbackData = await fallbackResponse.json()
-              console.log('✅ Fallback search successful')
-              return fallbackData.urls.regular || fallbackData.urls.full
-            }
+          const styleDescriptions = {
+            professional: 'professional, corporate, business-like, clean, modern, high-quality',
+            creative: 'creative, artistic, colorful, innovative, unique, eye-catching',
+            minimal: 'minimal, clean, simple, elegant, modern, uncluttered',
+            vibrant: 'vibrant, colorful, energetic, dynamic, bold, striking',
           }
-        } else {
-          const errorText = await searchResponse.text()
-          console.error('❌ Unsplash API error:', searchResponse.status, errorText)
+          
+          const promptEnhancementRequest = `Create a detailed image generation prompt for: "${prompt}"
+
+Style: ${style} (${styleDescriptions[style]})
+Context: This is for a LinkedIn post image
+
+Requirements:
+- Make it specific and detailed
+- Include visual elements, colors, composition
+- Keep it under 100 words
+- Focus on ${style} aesthetic
+- Make it suitable for professional social media
+
+Return ONLY the enhanced prompt, nothing else.`
+
+          const result = await model.generateContent(promptEnhancementRequest)
+          enhancedPrompt = result.response.text().trim()
+          console.log('✅ Enhanced prompt:', enhancedPrompt)
+        } catch (geminiError) {
+          console.error('⚠️ Gemini enhancement failed, using original prompt:', geminiError)
         }
+      }
+
+      // Step 2: Generate image using Pollinations.ai (free AI image generation)
+      // Pollinations.ai is a free service that generates images using Stable Diffusion
+      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=${width}&height=${height}&nologo=true&enhance=true`
+      
+      console.log('🎨 Generating image with Pollinations.ai')
+      console.log('📐 Dimensions:', `${width}x${height}`)
+      
+      // Test if the URL is accessible
+      const testResponse = await fetch(pollinationsUrl, { method: 'HEAD' })
+      
+      if (testResponse.ok) {
+        console.log('✅ AI image generated successfully')
+        return pollinationsUrl
       } else {
-        console.log('⚠️ No Unsplash API key configured')
-        console.log('💡 Add UNSPLASH_ACCESS_KEY to your .env.local file for AI-powered image generation')
+        throw new Error('Pollinations.ai service unavailable')
       }
       
-      // Fallback: Use Picsum Photos with seed for consistency
-      console.log('Using Picsum fallback with seed based on prompt')
-      const seed = prompt.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      const picsumUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`
-      return picsumUrl
-      
     } catch (error) {
-      console.error('Image generation error:', error)
+      console.error('❌ AI image generation error:', error)
       
-      // Final fallback: Create a nice gradient placeholder
+      // Fallback: Use a gradient placeholder with the prompt text
       const colors = {
         professional: '0A66C2/FFFFFF',
         creative: 'FF6B6B/FFFFFF',
@@ -107,9 +97,10 @@ export class ImageGenerator {
       }
       
       const colorScheme = colors[style]
-      const text = prompt.substring(0, 30).replace(/[^a-zA-Z0-9 ]/g, '')
+      const text = prompt.substring(0, 50).replace(/[^a-zA-Z0-9 ]/g, '')
       
-      return `https://via.placeholder.com/${width}x${height}/${colorScheme}?text=${encodeURIComponent(text)}`
+      console.log('⚠️ Using fallback placeholder image')
+      return `https://placehold.co/${width}x${height}/${colorScheme.replace('/', '/').split('/')[0]}/${colorScheme.split('/')[1]}/png?text=${encodeURIComponent(text)}`
     }
   }
 
@@ -140,17 +131,12 @@ export class ImageGenerator {
 }
 
 export function createImageGenerator(): ImageGenerator {
-  // Use Unsplash Access Key for official API (server-side only)
-  const apiKey = process.env.UNSPLASH_ACCESS_KEY || ''
+  // Use Gemini API Key for prompt enhancement
+  const geminiApiKey = process.env.GEMINI_API_KEY || ''
   
-  console.log('🖼️ Creating ImageGenerator')
-  console.log('🔑 API Key Status:', apiKey ? `Present (${apiKey.substring(0, 10)}...)` : '❌ MISSING')
-  console.log('🔑 Full Key Length:', apiKey.length)
+  console.log('🖼️ Creating AI ImageGenerator')
+  console.log('🤖 Gemini API Status:', geminiApiKey ? '✅ Configured' : '⚠️ Not configured (will use basic prompts)')
+  console.log('🎨 Using Pollinations.ai for free AI image generation')
   
-  if (!apiKey) {
-    console.error('❌ UNSPLASH_ACCESS_KEY is not set in environment variables!')
-    console.error('💡 Make sure to add UNSPLASH_ACCESS_KEY to your .env.local file')
-  }
-  
-  return new ImageGenerator(apiKey)
+  return new ImageGenerator(geminiApiKey)
 }

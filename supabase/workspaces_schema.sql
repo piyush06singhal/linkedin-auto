@@ -126,7 +126,6 @@ CREATE POLICY "Workspace owners can delete members"
 CREATE POLICY "Users can view their invitations"
   ON public.workspace_invitations FOR SELECT
   USING (
-    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
     workspace_id IN (
       SELECT id FROM public.workspaces WHERE owner_id = auth.uid()
     )
