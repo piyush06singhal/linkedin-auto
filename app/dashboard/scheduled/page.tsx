@@ -128,14 +128,6 @@ export default function ScheduledPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto p-8">
-        <div className="p-6">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg"></div>
-            <span className="text-xl font-bold">LinkedAI</span>
-          </Link>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-1">
           <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -175,11 +167,7 @@ export default function ScheduledPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>Scheduled</span>
-          </Link>
-        </nav>
-
-          {/* Header */}
+        {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-2">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
