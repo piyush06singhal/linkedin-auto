@@ -136,14 +136,15 @@ LinkedAI - AI-Powered LinkedIn Automation
 
   try {
     console.log('📧 Sending workspace invitation email to:', inviteeEmail)
+    console.log('🔑 Resend API Key status:', process.env.RESEND_API_KEY ? 'Present' : 'Missing')
     
     if (!process.env.RESEND_API_KEY) {
-      console.warn('⚠️ RESEND_API_KEY not configured. Email will not be sent.')
+      console.error('❌ RESEND_API_KEY not configured. Email will not be sent.')
       console.log('📝 Email content (for testing):')
       console.log('To:', inviteeEmail)
       console.log('Subject:', subject)
       console.log('Accept URL:', acceptUrl)
-      return { success: false, error: 'Email service not configured' }
+      return { success: false, error: 'Email service not configured - RESEND_API_KEY missing' }
     }
 
     const result = await resend.emails.send({

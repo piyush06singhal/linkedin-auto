@@ -132,7 +132,9 @@ export async function POST(
       .single()
 
     // Send email notification
+    let emailSent = false
     try {
+      console.log('📧 Attempting to send invitation email...')
       const { sendWorkspaceInviteEmail } = await import('@/lib/email/workspace-invites')
       
       const emailResult = await sendWorkspaceInviteEmail({
@@ -145,15 +147,19 @@ export async function POST(
       })
 
       if (emailResult.success) {
-        console.log('✅ Invitation email sent successfully')
+        console.log('✅ Invitation email sent successfully to:', email)
+        emailSent = true
       } else {
-        console.warn('⚠️ Email sending failed:', emailResult.error)
+        console.error('⚠️ Email sending failed:', emailResult.error)
         // Don't fail the invitation if email fails
       }
-    } catch (emailError) {
+    } catch (emailError: any) {
       console.error('❌ Error sending invitation email:', emailError)
+      console.error('Email error details:', emailError.message)
       // Don't fail the invitation if email fails
     }
+
+    console.log('📊 Invitation summary - Created:', invitation.id, 'Email sent:', emailSent)
 
     return NextResponse.json({ success: true, invitation })
 

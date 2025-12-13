@@ -371,11 +371,18 @@ export default function AnalyticsPage() {
             {/* Posts by Day of Week */}
             <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Posts by Day of Week</h3>
-              <div className="h-64 flex items-end justify-between space-x-2">
+              <div className="h-64 flex items-end justify-between space-x-2 relative">
+                {/* Y-axis guide lines */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-200"></div>
+                </div>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const count = analytics.postsByDay[day] || 0
-                  // Calculate height: minimum 8% for any post, scale up to 100% for max
-                  const heightPercent = count === 0 ? 0 : Math.max(8, (count / maxPostsByDay) * 100)
+                  // Calculate height: minimum 10% for any post, scale up to 100% for max
+                  const heightPercent = count === 0 ? 0 : Math.max(10, (count / maxPostsByDay) * 100)
                   return (
                     <div key={day} className="flex-1 flex flex-col items-center">
                       <div
@@ -400,11 +407,18 @@ export default function AnalyticsPage() {
             {/* Posts by Month */}
             <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-6">Posts Over Time (Last 6 Months)</h3>
-              <div className="h-64 flex items-end justify-between space-x-2">
+              <div className="h-64 flex items-end justify-between space-x-2 relative">
+                {/* Y-axis guide lines */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-100"></div>
+                  <div className="border-t border-gray-200"></div>
+                </div>
                 {Object.entries(analytics.postsByMonth).map(([month, count]) => {
                   const monthLabel = month.split(' ')[0] // Just show month name
-                  // Calculate height: minimum 8% for any post, scale up to 100% for max
-                  const heightPercent = count === 0 ? 0 : Math.max(8, (count / maxPostsByMonth) * 100)
+                  // Calculate height: minimum 10% for any post, scale up to 100% for max
+                  const heightPercent = count === 0 ? 0 : Math.max(10, (count / maxPostsByMonth) * 100)
                   return (
                     <div key={month} className="flex-1 flex flex-col items-center">
                       <div
