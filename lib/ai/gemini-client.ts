@@ -199,6 +199,10 @@ export class GeminiClient {
     const prompt = this.buildPrompt(topic, tone, length, includeHashtags, includeEmojis)
 
     const result = await this.retryWithBackoff(async () => {
+      console.log('📡 Making request to Gemini API...')
+      console.log('🔗 URL:', `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent`)
+      console.log('🔑 Using API Key:', this.apiKey.substring(0, 20) + '...')
+      
       const response = await fetch(
         `${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent?key=${this.apiKey}`,
         {
@@ -245,9 +249,13 @@ export class GeminiClient {
         }
       )
 
+      console.log('📥 Response status:', response.status, response.statusText)
+      
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Gemini API Response:', errorText)
+        console.error('❌ Gemini API Error Response:', errorText)
+        console.error('❌ Status:', response.status)
+        console.error('❌ Status Text:', response.statusText)
         
         let errorData
         try {
@@ -497,7 +505,9 @@ export function createGeminiClient(): GeminiClient {
   const apiKey = process.env.GOOGLE_AI_API_KEY
   
   console.log('🤖 Creating Gemini Client')
-  console.log('🔑 API Key Status:', apiKey ? `Present (${apiKey.substring(0, 10)}...)` : '❌ MISSING')
+  console.log('🔑 API Key Status:', apiKey ? `Present (${apiKey.substring(0, 15)}...)` : '❌ MISSING')
+  console.log('🔑 Full API Key (first 20 chars):', apiKey?.substring(0, 20))
+  console.log('🔑 API Key length:', apiKey?.length)
   
   if (!apiKey) {
     console.error('❌ GOOGLE_AI_API_KEY is not configured in environment variables!')

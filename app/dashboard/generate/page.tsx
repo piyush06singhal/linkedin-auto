@@ -112,7 +112,13 @@ export default function GeneratePage() {
         }
 
         console.log('✅ Post generated successfully!')
+        console.log('🤖 Provider:', data.provider || 'gemini')
         console.log('📝 Generated content preview:', data.result.substring(0, 100) + '...')
+        
+        // Show info if using fallback
+        if (data.provider === 'huggingface') {
+          console.log('ℹ️ Using Hugging Face (Gemini quota exhausted)')
+        }
         
         posts.push(data.result)
         

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createGeminiClient } from '@/lib/ai/gemini-client'
+import { createHuggingFaceClient } from '@/lib/ai/huggingface-client'
 
 export async function POST(request: Request) {
   try {
@@ -35,42 +36,69 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ API Key is configured')
-    console.log('🤖 Creating Gemini client...')
-
-    // Create Gemini client
-    const gemini = createGeminiClient()
+    console.log('🤖 Creating AI client...')
 
     let result
+    let usedFallback = false
 
     switch (action) {
       case 'generate':
-        // Generate a single post
-        console.log('🚀 Calling Gemini API to generate post...')
-        result = await gemini.generatePost({
-          topic,
-          tone,
-          length,
-          includeHashtags,
-          includeEmojis,
-        })
-        console.log('✅ Post generated successfully!')
+        // Try Gemini first, fallback to Hugging Face if it fails
+        try {
+          console.log('🚀 Trying Gemini API first...')
+          const gemini = createGeminiClient()
+          result = await gemini.generatePost({
+            topic,
+            tone,
+            length,
+            includeHashtags,
+            includeEmojis,
+          })
+          console.log('✅ Post generated with Gemini!')
+        } catch (geminiError: any) {
+          console.log('⚠️ Gemini failed:', geminiError.message)
+          
+          // Check if it's a rate limit error
+          if (geminiError.message.includes('quota') || 
+              geminiError.message.includes('exceeded') ||
+              geminiError.message.includes('429')) {
+            console.log('🤗 Falling back to Hugging Face...')
+            
+            const hf = createHuggingFaceClient()
+            result = await hf.generatePost({
+              topic,
+              tone,
+              length,
+              includeHashtags,
+              includeEmojis,
+            })
+            usedFallback = true
+            console.log('✅ Post generated with Hugging Face!')
+          } else {
+            // If it's not a rate limit error, throw it
+            throw geminiError
+          }
+        }
         console.log('📊 Result length:', result.length, 'characters')
         break
 
       case 'variations':
-        // Generate multiple variations
-        result = await gemini.generatePostVariations(topic, 3)
+        // Generate multiple variations (Gemini only for now)
+        const geminiForVariations = createGeminiClient()
+        result = await geminiForVariations.generatePostVariations(topic, 3)
         break
 
       case 'improve':
-        // Improve existing post
+        // Improve existing post (Gemini only for now)
         const { originalPost } = body
-        result = await gemini.improvePost(originalPost)
+        const geminiForImprove = createGeminiClient()
+        result = await geminiForImprove.improvePost(originalPost)
         break
 
       case 'ideas':
-        // Generate post ideas
-        result = await gemini.generatePostIdeas(topic, 5)
+        // Generate post ideas (Gemini only for now)
+        const geminiForIdeas = createGeminiClient()
+        result = await geminiForIdeas.generatePostIdeas(topic, 5)
         break
 
       default:
@@ -80,7 +108,11 @@ export async function POST(request: Request) {
         )
     }
 
-    return NextResponse.json({ success: true, result })
+    return NextResponse.json({ 
+      success: true, 
+      result,
+      provider: usedFallback ? 'huggingface' : 'gemini'
+    })
   } catch (error: any) {
     console.error('Generate post error:', error)
     
