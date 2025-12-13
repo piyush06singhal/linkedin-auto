@@ -12,6 +12,7 @@ export default function ScheduledPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [linkedInConnected, setLinkedInConnected] = useState(false)
+  const [publishingPostId, setPublishingPostId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchScheduledPosts()
@@ -68,10 +69,16 @@ export default function ScheduledPage() {
       return
     }
 
+    // Prevent double-click
+    if (publishingPostId === post.id) {
+      console.log('⚠️ Already publishing this post, ignoring duplicate request')
+      return
+    }
+
     if (!confirm('Publish this post to LinkedIn now?')) return
 
     try {
-      setLoading(true)
+      setPublishingPostId(post.id)
       
       // Call API to publish to LinkedIn
       const response = await fetch('/api/publish-to-linkedin', {
@@ -86,13 +93,22 @@ export default function ScheduledPage() {
         throw new Error(data.error || 'Failed to publish')
       }
 
-      alert('✅ Post published to LinkedIn successfully!')
-      fetchScheduledPosts()
+      // Show appropriate message
+      if (data.isDuplicate || data.alreadyPublished) {
+        alert('✅ Post is already published on LinkedIn!')
+      } else {
+        alert('✅ Post published to LinkedIn successfully!')
+      }
+      
+      // Wait a bit before refreshing to avoid duplicate detection
+      setTimeout(() => {
+        fetchScheduledPosts()
+      }, 1000)
     } catch (error: any) {
       console.error('Error publishing post:', error)
       alert(`❌ Failed to publish: ${error.message}`)
     } finally {
-      setLoading(false)
+      setPublishingPostId(null)
     }
   }
 
@@ -315,14 +331,28 @@ export default function ScheduledPage() {
                     <div className="ml-4 flex gap-2">
                       <button
                         onClick={() => handlePublishNow(post)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium"
+                        disabled={publishingPostId === post.id}
+                        className={`px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition text-sm font-medium flex items-center space-x-2 ${
+                          publishingPostId === post.id ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                         title="Publish to LinkedIn now"
                       >
-                        Publish Now
+                        {publishingPostId === post.id ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Publishing...</span>
+                          </>
+                        ) : (
+                          <span>Publish Now</span>
+                        )}
                       </button>
                       <button
                         onClick={() => handleCancel(post.id)}
-                        className="px-4 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition text-sm font-medium"
+                        disabled={publishingPostId === post.id}
+                        className="px-4 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Cancel
                       </button>

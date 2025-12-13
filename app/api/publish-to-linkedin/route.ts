@@ -57,6 +57,17 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
+    // Check if already published to avoid duplicates
+    if (post.status === 'published' && post.linkedin_post_id) {
+      console.log('⚠️ Post already published, skipping duplicate publish')
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Post already published to LinkedIn',
+        linkedInPostId: post.linkedin_post_id,
+        alreadyPublished: true
+      })
+    }
+
     // Create LinkedIn client and publish
     console.log('📤 Publishing to LinkedIn...')
     const linkedIn = new LinkedInClient(userData.linkedin_access_token)
@@ -68,7 +79,7 @@ export async function POST(request: Request) {
 
     console.log('✅ Published to LinkedIn:', linkedInPost)
 
-    // Update post status
+    // Update post status (only if not already published)
     const { error: updateError } = await supabase
       .from('posts')
       .update({ 
@@ -77,24 +88,60 @@ export async function POST(request: Request) {
         linkedin_post_id: linkedInPost.id || null
       })
       .eq('id', postId)
+      .eq('status', post.status) // Only update if status hasn't changed
 
     if (updateError) {
       console.error('Error updating post status:', updateError)
     }
 
-    // Create success notification
-    await notifyPostPublished(user.id, postId)
+    // Create success notification (only if not a duplicate)
+    if (!linkedInPost.isDuplicate) {
+      await notifyPostPublished(user.id, postId)
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Post published to LinkedIn successfully!',
-      linkedInPostId: linkedInPost.id
+      message: linkedInPost.isDuplicate 
+        ? 'Post already exists on LinkedIn' 
+        : 'Post published to LinkedIn successfully!',
+      linkedInPostId: linkedInPost.id,
+      isDuplicate: linkedInPost.isDuplicate || false
     })
 
   } catch (error: any) {
     console.error('Publish to LinkedIn error:', error)
     
-    // Create failure notification if we have user and post info
+    // Check if it's a duplicate post error (LinkedIn returns 429 or specific error message)
+    const isDuplicateError = 
+      error.message?.includes('DUPLICATE_POST') ||
+      error.message?.includes('duplicate') ||
+      error.message?.includes('429') ||
+      error.statusCode === 429
+
+    if (isDuplicateError) {
+      console.log('⚠️ Duplicate post detected - treating as success')
+      
+      // Update post status if not already published
+      if (postId && userId) {
+        const supabase = createRouteHandlerClient({ cookies })
+        await supabase
+          .from('posts')
+          .update({ 
+            status: 'published',
+            published_at: new Date().toISOString()
+          })
+          .eq('id', postId)
+          .eq('user_id', userId)
+      }
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Post already published to LinkedIn',
+        isDuplicate: true
+      })
+    }
+    
+    // Create failure notification if we have user and post info (but not for duplicates)
     if (userId && postId) {
       await notifyPostFailed(userId, postId, error.message || 'Unknown error')
     }

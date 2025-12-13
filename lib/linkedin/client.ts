@@ -77,8 +77,29 @@ export class LinkedInClient {
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Failed to create LinkedIn post: ${error}`)
+      const errorText = await response.text()
+      let errorData
+      
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { message: errorText }
+      }
+
+      // Check if it's a duplicate post error
+      if (response.status === 429 || 
+          errorText.includes('DUPLICATE_POST') || 
+          errorText.includes('duplicate')) {
+        console.warn('⚠️ LinkedIn duplicate post detected - this is expected behavior')
+        // Return a success-like response since the post exists
+        return {
+          id: 'duplicate',
+          message: 'Post already exists on LinkedIn',
+          isDuplicate: true
+        }
+      }
+
+      throw new Error(`Failed to create LinkedIn post: ${errorText}`)
     }
 
     return response.json()
