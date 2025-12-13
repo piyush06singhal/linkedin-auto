@@ -81,9 +81,9 @@ export default function GeneratePage() {
         
         console.log('📤 Request Body:', JSON.stringify(requestBody, null, 2))
         
-        // Add timeout to prevent infinite loading
+        // Add timeout to prevent infinite loading (60s for Hugging Face cold start)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
         
         try {
           var response = await fetch('/api/generate-post', {
@@ -94,7 +94,7 @@ export default function GeneratePage() {
           })
         } catch (fetchError: any) {
           if (fetchError.name === 'AbortError') {
-            throw new Error('Request timed out after 30 seconds. Please try again with a simpler topic.')
+            throw new Error('Request timed out after 60 seconds. The AI model might be loading. Please try again in a moment.')
           }
           throw fetchError
         } finally {
