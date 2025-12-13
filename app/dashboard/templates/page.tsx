@@ -309,6 +309,7 @@ export default function TemplatesPage() {
             ))}
           </div>
         </div>
+      </div>
 
       {/* Template Preview Modal */}
       {selectedTemplate && (
@@ -399,7 +400,6 @@ export default function TemplatesPage() {
           </div>
         </div>
       )}
-      </div>
     </DashboardLayout>
   )
 }
