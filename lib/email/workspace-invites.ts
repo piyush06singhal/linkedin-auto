@@ -1,8 +1,6 @@
 // Workspace invitation email service
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export interface WorkspaceInviteEmailData {
   inviteeEmail: string
   inviterName: string
@@ -137,6 +135,7 @@ LinkedAI - AI-Powered LinkedIn Automation
   try {
     console.log('📧 Sending workspace invitation email to:', inviteeEmail)
     console.log('🔑 Resend API Key status:', process.env.RESEND_API_KEY ? 'Present' : 'Missing')
+    console.log('🔑 API Key value (first 10 chars):', process.env.RESEND_API_KEY?.substring(0, 10))
     
     if (!process.env.RESEND_API_KEY) {
       console.error('❌ RESEND_API_KEY not configured. Email will not be sent.')
@@ -146,6 +145,9 @@ LinkedAI - AI-Powered LinkedIn Automation
       console.log('Accept URL:', acceptUrl)
       return { success: false, error: 'Email service not configured - RESEND_API_KEY missing' }
     }
+
+    // Initialize Resend with API key (do this inside the function to ensure env vars are loaded)
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
     // Use environment variable for sender email, fallback to Resend test domain
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'LinkedAI <onboarding@resend.dev>'
