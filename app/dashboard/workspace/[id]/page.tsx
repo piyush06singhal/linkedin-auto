@@ -83,14 +83,29 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
         throw new Error(errorMsg || 'Failed to send invitation')
       }
 
-      alert(`✅ Invitation sent to ${inviteEmail}`)
+      // Generate invitation link
+      const inviteLink = `${window.location.origin}/dashboard/workspace/${workspaceId}?invitation=${data.invitation.id}`
+      
+      // Show success message with option to copy link
+      const copyLink = confirm(
+        `✅ Invitation created for ${inviteEmail}!\n\n` +
+        `📧 Email Status: ${data.invitation ? 'Sent' : 'Created (email may be delayed)'}\n\n` +
+        `💡 TIP: You can also share this invitation link directly:\n${inviteLink}\n\n` +
+        `Click OK to copy the link to clipboard, or Cancel to close.`
+      )
+      
+      if (copyLink) {
+        navigator.clipboard.writeText(inviteLink)
+        alert('📋 Invitation link copied to clipboard!')
+      }
+      
       setShowInviteModal(false)
       setInviteEmail('')
       setInviteRole('editor')
 
     } catch (error: any) {
       console.error('Invitation error:', error)
-      alert(error.message || 'Failed to send invitation')
+      alert(`❌ Error: ${error.message || 'Failed to send invitation'}\n\n💡 TIP: Check the console for more details.`)
     } finally {
       setInviting(false)
     }

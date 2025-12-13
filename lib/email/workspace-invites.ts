@@ -168,6 +168,23 @@ LinkedAI - AI-Powered LinkedIn Automation
     
   } catch (error: any) {
     console.error('❌ Failed to send email:', error)
-    return { success: false, error: error.message }
+    console.error('Error details:', {
+      message: error.message,
+      statusCode: error.statusCode,
+      name: error.name
+    })
+    
+    // Provide helpful error messages
+    let errorMessage = error.message
+    if (error.message?.includes('domain') || error.statusCode === 403) {
+      errorMessage = 'Domain not verified in Resend. Please verify your domain or use delivered@resend.dev for testing.'
+      console.log('💡 TIP: Visit https://resend.com/domains to verify your domain')
+    } else if (error.statusCode === 401) {
+      errorMessage = 'Invalid Resend API key. Please check your RESEND_API_KEY in .env.local'
+    } else if (error.statusCode === 429) {
+      errorMessage = 'Rate limit exceeded. Please wait a few minutes and try again.'
+    }
+    
+    return { success: false, error: errorMessage }
   }
 }
