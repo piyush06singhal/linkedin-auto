@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import DashboardLayout from '@/components/DashboardLayout'
 
 interface Post {
   id: string
@@ -98,9 +99,8 @@ export default function DraftsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <DashboardLayout>
+      <div className="max-w-7xl mx-auto p-8">
         <div className="p-6">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-lg"></div>
@@ -151,11 +151,7 @@ export default function DraftsPage() {
             <span>Scheduled</span>
           </Link>
         </nav>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-2">
@@ -372,6 +368,7 @@ export default function DraftsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
