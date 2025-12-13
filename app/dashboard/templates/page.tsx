@@ -309,7 +309,6 @@ export default function TemplatesPage() {
             ))}
           </div>
         </div>
-      </main>
 
       {/* Template Preview Modal */}
       {selectedTemplate && (
