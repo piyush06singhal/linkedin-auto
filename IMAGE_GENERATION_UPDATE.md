@@ -5,88 +5,145 @@
 ### Removed: Unsplash
 - ❌ Removed Unsplash API dependency
 - ❌ No more stock photo searches
-- ❌ No API key required
+- ❌ No more limited stock photo results
 
-### Added: AI Image Generation
-- ✅ **Pollinations.ai** - Free AI image generation service
-- ✅ **Gemini AI** - Enhances prompts for better results
-- ✅ Generates actual AI images based on your prompts
-- ✅ Completely free, no API keys needed
+### Added: Gemini Imagen 3 (Nano Banana)
+- ✅ **Gemini Imagen 3** - Google's latest AI image generation model
+- ✅ **High-quality AI images** - Professional, creative, and unique
+- ✅ **Smart prompt enhancement** - Automatically optimizes your prompts
+- ✅ **Fallback system** - Pollinations.ai if Gemini is unavailable
+- ✅ Uses your existing `GEMINI_API_KEY` - No additional setup needed
 
 ## How It Works
 
-### 1. Prompt Enhancement (Optional)
-If you have `GEMINI_API_KEY` configured:
-- Gemini AI analyzes your prompt
-- Enhances it with visual details, colors, composition
-- Optimizes for the selected style (professional, creative, minimal, vibrant)
-
-### 2. AI Image Generation
-- Uses **Pollinations.ai** (powered by Stable Diffusion)
-- Generates unique AI images based on your prompt
+### 1. Primary: Gemini Imagen 3
+- Uses Google's **Imagen 3** model (aka Nano Banana & Nano Banana Pro)
+- Automatically enhances your prompt with style keywords
+- Generates high-quality, professional AI images
+- Returns base64-encoded images
 - Supports all aspect ratios: 1:1, 16:9, 4:5
-- High quality: 1024x1024, 1920x1080, 1024x1280
 
-### 3. Fallback
-If AI generation fails:
-- Uses placeholder with gradient colors
+### 2. Fallback: Pollinations.ai
+If Gemini Imagen fails or is unavailable:
+- Automatically falls back to **Pollinations.ai**
+- Uses Stable Diffusion for image generation
+- Free service, no additional API keys needed
+- Still generates quality AI images
+
+### 3. Final Fallback: Placeholder
+If both services fail:
+- Uses styled placeholder with gradient colors
 - Shows your prompt text
-- Still looks professional
+- Maintains professional appearance
 
 ## Benefits
 
-### Better Image Relevance
-- AI generates images specifically for your prompt
+### Superior Image Quality
+- **Gemini Imagen 3** is Google's latest and most advanced image model
+- Generates photorealistic, high-quality images
+- Better understanding of complex prompts
+- Professional-grade results suitable for LinkedIn
+
+### Perfect Image Relevance
+- AI generates images specifically for your exact prompt
 - Not limited to stock photo availability
-- More creative and unique results
+- Unique images every time - never duplicates
+- Context-aware generation
 
 ### Cost Effective
-- Pollinations.ai is completely free
-- No API keys or rate limits
+- Uses your existing `GEMINI_API_KEY`
+- No additional API keys or subscriptions needed
+- Free fallback with Pollinations.ai
 - Unlimited image generation
 
-### Improved Quality
-- Gemini enhances prompts for better results
-- AI understands context and style
-- Professional-looking images every time
+### Smart & Reliable
+- Automatic prompt enhancement based on style
+- Multi-tier fallback system ensures images always load
+- Handles errors gracefully
+- Professional results guaranteed
 
 ## Examples
 
 ### Before (Unsplash)
 ```
 Prompt: "AI technology"
-Result: Random stock photo of computers/robots
+Result: Random stock photo of computers/robots from Unsplash database
+Limitation: Limited to existing photos, may not match your vision
 ```
 
-### After (AI Generation)
+### After (Gemini Imagen 3)
 ```
 Prompt: "AI technology"
-Gemini Enhancement: "Modern AI technology visualization with neural networks, 
-blue and purple gradient, futuristic interface, professional corporate style, 
-clean composition, high-tech aesthetic"
-Result: Custom AI-generated image matching exact description
+Enhanced: "AI technology. Style: professional, corporate, business-like, 
+clean, modern, high-quality, LinkedIn-appropriate. High quality, 
+professional photography, 4K resolution."
+Result: Unique AI-generated image created specifically for your prompt
+Quality: Photorealistic, professional-grade, perfectly matches your needs
 ```
+
+### Style Examples
+
+**Professional Style:**
+- Prompt: "Team collaboration"
+- Result: Clean, corporate office setting with modern aesthetics
+
+**Creative Style:**
+- Prompt: "Innovation"
+- Result: Colorful, artistic visualization with dynamic elements
+
+**Minimal Style:**
+- Prompt: "Productivity"
+- Result: Simple, elegant composition with clean lines
+
+**Vibrant Style:**
+- Prompt: "Success"
+- Result: Bold, energetic image with striking colors
 
 ## Configuration
 
 ### Required
-- `GEMINI_API_KEY` - Already configured for content generation
+- `GEMINI_API_KEY` or `GOOGLE_AI_API_KEY` - Already configured for content generation
+- Same API key works for both text and image generation!
 
 ### Optional
-- None! Pollinations.ai works without any API key
+- None! The fallback system works automatically
+
+### API Key Setup
+If you don't have a Gemini API key yet:
+1. Go to https://makersuite.google.com/app/apikey
+2. Create a new API key
+3. Add to `.env.local`: `GEMINI_API_KEY=your_key_here`
+4. Restart your development server
 
 ## Technical Details
 
-### API Endpoint
+### Primary: Gemini Imagen 3 API
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict
+```
+
+**Parameters:**
+- `prompt` - Enhanced text description
+- `aspectRatio` - 1:1, 16:9, or 4:5
+- `sampleCount` - Number of images (we use 1)
+- `safetyFilterLevel` - Content filtering
+- `personGeneration` - Allow adult person generation
+
+**Response:**
+- Base64-encoded PNG image
+- High resolution (1024x1024, 1920x1080, or 1024x1280)
+- Professional quality
+
+### Fallback: Pollinations.ai
 ```
 https://image.pollinations.ai/prompt/{prompt}?width={w}&height={h}&nologo=true&enhance=true
 ```
 
-### Features
-- `nologo=true` - No watermarks
-- `enhance=true` - Better quality
-- Custom dimensions
-- URL-based, no authentication needed
+**Features:**
+- Free Stable Diffusion API
+- No authentication needed
+- Instant generation
+- Good quality fallback
 
 ## Migration Notes
 
