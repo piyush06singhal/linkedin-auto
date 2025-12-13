@@ -61,6 +61,8 @@ export default function AnalyticsPage() {
 
   const fetchAnalytics = async (userId: string) => {
     try {
+      console.log('🔍 Fetching analytics for user:', userId)
+      
       // Fetch all posts
       const { data: posts, error } = await supabase
         .from('posts')
@@ -68,7 +70,15 @@ export default function AnalyticsPage() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      console.log('📊 Posts fetched:', posts?.length || 0)
+      if (posts && posts.length > 0) {
+        console.log('📝 Sample post:', posts[0])
+      }
+
+      if (error) {
+        console.error('❌ Error fetching posts:', error)
+        throw error
+      }
 
       if (posts) {
         const now = new Date()
@@ -103,19 +113,26 @@ export default function AnalyticsPage() {
         // Calculate posts by month (last 6 months)
         const postsByMonth: { [key: string]: number } = {}
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        
+        // Create month keys for last 6 months
         for (let i = 5; i >= 0; i--) {
           const date = new Date()
           date.setMonth(date.getMonth() - i)
-          const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+          const monthKey = monthNames[date.getMonth()]
           postsByMonth[monthKey] = 0
         }
+        
+        // Count posts for each month
         posts.forEach(post => {
           const date = new Date(post.created_at)
-          const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+          const monthKey = monthNames[date.getMonth()]
           if (monthKey in postsByMonth) {
             postsByMonth[monthKey]++
           }
         })
+        
+        console.log('📅 Posts by month:', postsByMonth)
+        console.log('📅 Total posts:', posts.length)
 
         setAnalytics({
           totalPosts: posts.length,
@@ -153,6 +170,12 @@ export default function AnalyticsPage() {
 
   const maxPostsByDay = Math.max(...Object.values(analytics.postsByDay), 1)
   const maxPostsByMonth = Math.max(...Object.values(analytics.postsByMonth), 1)
+
+  console.log('📊 Analytics Data:')
+  console.log('Posts by day:', analytics.postsByDay)
+  console.log('Posts by month:', analytics.postsByMonth)
+  console.log('Max by day:', maxPostsByDay)
+  console.log('Max by month:', maxPostsByMonth)
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -384,20 +407,20 @@ export default function AnalyticsPage() {
                   // Calculate height: minimum 10% for any post, scale up to 100% for max
                   const heightPercent = count === 0 ? 0 : Math.max(10, (count / maxPostsByDay) * 100)
                   return (
-                    <div key={day} className="flex-1 flex flex-col items-center">
+                    <div key={day} className="flex-1 flex flex-col items-center relative z-10">
                       <div
                         className="w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all hover:opacity-80 cursor-pointer relative group"
-                        style={{ height: `${heightPercent}%` }}
+                        style={{ height: `${heightPercent}%`, minHeight: count > 0 ? '24px' : '0' }}
                         title={`${count} posts`}
                       >
                         {count > 0 && (
-                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-20">
                             {count} {count === 1 ? 'post' : 'posts'}
                           </span>
                         )}
                       </div>
                       <span className="text-xs text-gray-600 mt-3 font-medium">{day}</span>
-                      <span className="text-xs text-gray-400">{count}</span>
+                      <span className="text-xs text-gray-400 font-bold">{count}</span>
                     </div>
                   )
                 })}
@@ -416,23 +439,22 @@ export default function AnalyticsPage() {
                   <div className="border-t border-gray-200"></div>
                 </div>
                 {Object.entries(analytics.postsByMonth).map(([month, count]) => {
-                  const monthLabel = month.split(' ')[0] // Just show month name
                   // Calculate height: minimum 10% for any post, scale up to 100% for max
                   const heightPercent = count === 0 ? 0 : Math.max(10, (count / maxPostsByMonth) * 100)
                   return (
-                    <div key={month} className="flex-1 flex flex-col items-center">
+                    <div key={month} className="flex-1 flex flex-col items-center relative z-10">
                       <div
                         className="w-full bg-gradient-to-t from-green-500 to-green-600 rounded-t-xl transition-all hover:opacity-80 cursor-pointer relative group"
-                        style={{ height: `${heightPercent}%` }}
+                        style={{ height: `${heightPercent}%`, minHeight: count > 0 ? '24px' : '0' }}
                         title={`${month}: ${count} posts`}
                       >
                         {count > 0 && (
-                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                          <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-20">
                             {count} {count === 1 ? 'post' : 'posts'}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-600 mt-3 font-medium text-center">{monthLabel}</span>
+                      <span className="text-xs text-gray-600 mt-3 font-medium text-center">{month}</span>
                       <span className="text-xs text-gray-400">{count}</span>
                     </div>
                   )

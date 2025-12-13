@@ -147,8 +147,14 @@ LinkedAI - AI-Powered LinkedIn Automation
       return { success: false, error: 'Email service not configured - RESEND_API_KEY missing' }
     }
 
+    // Use environment variable for sender email, fallback to Resend test domain
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'LinkedAI <onboarding@resend.dev>'
+    
+    console.log('📤 Sending from:', fromEmail)
+    console.log('📬 Sending to:', inviteeEmail)
+    
     const result = await resend.emails.send({
-      from: 'LinkedAI <onboarding@resend.dev>', // Using Resend's test domain - works without verification
+      from: fromEmail,
       to: inviteeEmail,
       subject: subject,
       html: htmlContent,
