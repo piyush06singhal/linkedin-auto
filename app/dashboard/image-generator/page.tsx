@@ -46,25 +46,51 @@ export default function ImageGeneratorPage() {
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!generatedImage) return
 
-    const link = document.createElement('a')
-    link.href = generatedImage
-    link.download = `linkedin-image-${Date.now()}.png`
-    link.click()
+    try {
+      // Check if it's a base64 data URL (from Gemini Imagen)
+      if (generatedImage.startsWith('data:image')) {
+        // Direct download for base64 images
+        const link = document.createElement('a')
+        link.href = generatedImage
+        link.download = `linkedin-image-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        // For external URLs (Pollinations.ai, etc.), fetch and convert to blob
+        const response = await fetch(generatedImage)
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `linkedin-image-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Download error:', error)
+      alert('Failed to download image. Please try right-clicking and "Save Image As..."')
+    }
   }
 
   return (
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Image Finder</h1>
-          <p className="text-gray-600">Find professional stock photos for your LinkedIn posts from Unsplash</p>
-          <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> This searches Unsplash's stock photo library for images matching your keywords. 
-              It doesn't generate custom AI images. For best results, use simple keywords like "business meeting", "technology", "teamwork", etc.
+          <h1 className="text-3xl font-bold mb-2">AI Image Generator</h1>
+          <p className="text-gray-600">Generate professional AI images for your LinkedIn posts using Gemini Imagen 3</p>
+          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              <strong>✨ Powered by Gemini Imagen 3:</strong> This generates unique AI images specifically for your prompts. 
+              Describe what you want to see, and our AI will create a professional, high-quality image for you!
             </p>
           </div>
         </div>
@@ -154,15 +180,17 @@ export default function ImageGeneratorPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Generated Image</h2>
                 {generatedImage && (
-                  <button
-                    onClick={handleDownload}
-                    className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    <span>Download</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handleDownload}
+                      className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      <span>Download</span>
+                    </button>
+                  </div>
                 )}
               </div>
 
