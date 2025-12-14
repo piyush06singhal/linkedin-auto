@@ -38,6 +38,8 @@ export async function POST(request: Request) {
 
     console.log('✅ API Key is configured')
     console.log('🤖 Creating AI client...')
+    console.log('🔑 Groq API Key:', process.env.GROQ_API_KEY ? 'Present' : 'Missing')
+    console.log('🔑 HF API Key:', process.env.HUGGINGFACE_API_KEY ? 'Present' : 'Missing')
 
     let result
     let provider = 'gemini'

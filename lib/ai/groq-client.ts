@@ -33,30 +33,49 @@ export class GroqClient {
 
     console.log('⚡ Using Groq (Llama 3 70B) - Super Fast!')
     console.log('📝 Prompt length:', prompt.length)
+    console.log('🔗 API URL:', `${GROQ_API_BASE}/chat/completions`)
+    console.log('🔑 API Key (first 20 chars):', this.apiKey.substring(0, 20))
 
-    const response = await fetch(`${GROQ_API_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert LinkedIn content creator. Write engaging, professional LinkedIn posts that get high engagement.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
-        top_p: 0.9,
-      }),
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+    let response
+    try {
+      response = await fetch(`${GROQ_API_BASE}/chat/completions`, {
+        signal: controller.signal,
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert LinkedIn content creator. Write engaging, professional LinkedIn posts that get high engagement.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+          top_p: 0.9,
+        }),
+      })
+      
+      clearTimeout(timeoutId)
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Groq request timed out after 30 seconds')
+      }
+      throw fetchError
+    }
+
+    console.log('📥 Groq response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
