@@ -115,10 +115,13 @@ export default function GeneratePage() {
         console.log('🤖 Provider:', data.provider || 'gemini')
         console.log('📝 Generated content preview:', data.result.substring(0, 100) + '...')
         
-        // Show info if using fallback
-        if (data.provider === 'huggingface') {
-          console.log('ℹ️ Using Hugging Face (Gemini quota exhausted)')
+        // Show info about which AI was used
+        const providerNames: Record<string, string> = {
+          gemini: '🎯 Google Gemini',
+          groq: '⚡ Groq (Llama 3)',
+          huggingface: '🤗 Hugging Face (Mistral)'
         }
+        console.log(`ℹ️ Generated using: ${providerNames[data.provider] || data.provider}`)
         
         posts.push(data.result)
         

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createGeminiClient } from '@/lib/ai/gemini-client'
+import { createGroqClient } from '@/lib/ai/groq-client'
 import { createHuggingFaceClient } from '@/lib/ai/huggingface-client'
 
 export async function POST(request: Request) {
@@ -39,11 +40,11 @@ export async function POST(request: Request) {
     console.log('🤖 Creating AI client...')
 
     let result
-    let usedFallback = false
+    let provider = 'gemini'
 
     switch (action) {
       case 'generate':
-        // Try Gemini first, fallback to Hugging Face if it fails
+        // Try Gemini → Groq → Hugging Face (in order)
         try {
           console.log('🚀 Trying Gemini API first...')
           const gemini = createGeminiClient()
@@ -54,16 +55,29 @@ export async function POST(request: Request) {
             includeHashtags,
             includeEmojis,
           })
+          provider = 'gemini'
           console.log('✅ Post generated with Gemini!')
         } catch (geminiError: any) {
           console.log('⚠️ Gemini failed:', geminiError.message)
           
-          // Check if it's a rate limit error
-          if (geminiError.message.includes('quota') || 
-              geminiError.message.includes('exceeded') ||
-              geminiError.message.includes('429')) {
-            console.log('🤗 Falling back to Hugging Face...')
+          // Try Groq as second option
+          try {
+            console.log('⚡ Trying Groq (fast & free)...')
+            const groq = createGroqClient()
+            result = await groq.generatePost({
+              topic,
+              tone,
+              length,
+              includeHashtags,
+              includeEmojis,
+            })
+            provider = 'groq'
+            console.log('✅ Post generated with Groq!')
+          } catch (groqError: any) {
+            console.log('⚠️ Groq failed:', groqError.message)
             
+            // Final fallback to Hugging Face
+            console.log('🤗 Falling back to Hugging Face...')
             const hf = createHuggingFaceClient()
             result = await hf.generatePost({
               topic,
@@ -72,14 +86,12 @@ export async function POST(request: Request) {
               includeHashtags,
               includeEmojis,
             })
-            usedFallback = true
+            provider = 'huggingface'
             console.log('✅ Post generated with Hugging Face!')
-          } else {
-            // If it's not a rate limit error, throw it
-            throw geminiError
           }
         }
         console.log('📊 Result length:', result.length, 'characters')
+        console.log('🤖 Provider used:', provider)
         break
 
       case 'variations':
@@ -111,7 +123,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       result,
-      provider: usedFallback ? 'huggingface' : 'gemini'
+      provider
     })
   } catch (error: any) {
     console.error('Generate post error:', error)
