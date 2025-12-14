@@ -1,8 +1,8 @@
 // Groq AI Client for Content Generation (Fast & Free)
 
 const GROQ_API_BASE = 'https://api.groq.com/openai/v1'
-// Using Llama 3 70B - excellent for content generation
-const GROQ_MODEL = 'llama3-70b-8192'
+// Using Llama 3.3 70B - latest model for content generation
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 export interface GeneratePostOptions {
   topic?: string
