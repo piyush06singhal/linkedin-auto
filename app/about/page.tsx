@@ -128,15 +128,15 @@ export default function AboutPage() {
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div className="transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl font-bold mb-2">10K+</div>
+              <div className="text-5xl font-bold mb-2">100+</div>
               <p className="text-lg opacity-90">Active Users</p>
             </div>
             <div className="transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl font-bold mb-2">500K+</div>
+              <div className="text-5xl font-bold mb-2">50+</div>
               <p className="text-lg opacity-90">Posts Generated</p>
             </div>
             <div className="transform hover:scale-110 transition-all duration-300">
-              <div className="text-5xl font-bold mb-2">50+</div>
+              <div className="text-5xl font-bold mb-2">5+</div>
               <p className="text-lg opacity-90">Industries Served</p>
             </div>
             <div className="transform hover:scale-110 transition-all duration-300">
