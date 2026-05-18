@@ -16,7 +16,6 @@ export default function FeaturesPage() {
             <Link href="/features" className="text-primary font-medium">Features</Link>
 
             <Link href="/about" className="hover:text-primary">About</Link>
-            <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="hover:text-primary">Contact</Link>
           </div>
           <div className="flex items-center space-x-4">

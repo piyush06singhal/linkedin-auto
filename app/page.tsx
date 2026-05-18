@@ -1,69 +1,7 @@
 import Link from "next/link";
 import Footer from "@/components/Footer";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 
-async function getGlobalStats() {
-  const supabase = createServerComponentClient({ cookies });
-
-  try {
-    // Get total posts generated
-    const { count: postsCount } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true });
-
-    // Get average engagement rate
-    const { data: engagementData } = await supabase
-      .from("posts")
-      .select("engagement_rate")
-      .not("engagement_rate", "is", null);
-
-    const avgEngagement =
-      engagementData && engagementData.length > 0
-        ? Math.round(
-            engagementData.reduce(
-              (sum, post) => sum + (post.engagement_rate || 0),
-              0,
-            ) / engagementData.length,
-          )
-        : 0;
-
-    // Get scheduled posts count
-    const { count: scheduledCount } = await supabase
-      .from("posts")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "scheduled");
-
-    // Get total reach
-    const { data: reachData } = await supabase
-      .from("posts")
-      .select("reach")
-      .not("reach", "is", null);
-
-    const totalReach =
-      reachData && reachData.length > 0
-        ? reachData.reduce((sum, post) => sum + (post.reach || 0), 0)
-        : 0;
-
-    return {
-      postsGenerated: postsCount || 0,
-      avgEngagement: avgEngagement || 0,
-      scheduledPosts: scheduledCount || 0,
-      totalReach: totalReach || 0,
-    };
-  } catch (error) {
-    console.error("Error fetching stats:", error);
-    return {
-      postsGenerated: 0,
-      avgEngagement: 0,
-      scheduledPosts: 0,
-      totalReach: 0,
-    };
-  }
-}
-
-export default async function Home() {
-  const stats = await getGlobalStats();
+export default function Home() {
   return (
     <main className="min-h-screen bg-white">
       {/* Navigation */}
@@ -83,9 +21,6 @@ export default async function Home() {
 
             <Link href="/about" className="hover:text-primary">
               About
-            </Link>
-            <Link href="/blog" className="hover:text-primary">
-              Blog
             </Link>
             <Link href="/contact" className="hover:text-primary">
               Contact
@@ -134,51 +69,6 @@ export default async function Home() {
             >
               Start Free
             </Link>
-            <a
-              href="#features"
-              className="border-2 border-primary text-primary px-10 py-5 rounded-full text-lg font-medium hover:bg-primary hover:text-white transition-all duration-300 transform hover:scale-105"
-            >
-              ▶ See How It Works
-            </a>
-          </div>
-
-          {/* Dashboard Preview */}
-          <div className="max-w-5xl mx-auto mt-12">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-              <div className="bg-gray-100 px-4 py-3 flex items-center space-x-2 border-b border-gray-200">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              </div>
-              <div className="p-8 bg-gradient-to-br from-blue-50 to-purple-50">
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
-                    <div className="text-3xl font-bold text-primary">
-                      {stats.postsGenerated.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Posts Generated</div>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
-                    <div className="text-3xl font-bold text-green-600">
-                      {stats.avgEngagement}%
-                    </div>
-                    <div className="text-sm text-gray-600">Avg Engagement</div>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
-                    <div className="text-3xl font-bold text-purple-600">
-                      {stats.scheduledPosts}
-                    </div>
-                    <div className="text-sm text-gray-600">Scheduled</div>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
-                    <div className="text-3xl font-bold text-orange-600">
-                      {stats.totalReach.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Reach</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -362,78 +252,6 @@ export default async function Home() {
               and increase their LinkedIn engagement by up to 10x. Join us in
               revolutionizing professional content creation.
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Blog Section */}
-      <section id="blog" className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Latest from Our Blog</h2>
-            <p className="text-xl text-gray-600">
-              Tips, tricks, and insights for LinkedIn success
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition">
-              <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-500"></div>
-              <div className="p-6">
-                <div className="text-sm text-gray-500 mb-2">Dec 10, 2024</div>
-                <h3 className="text-xl font-bold mb-2">
-                  10 Tips for Better LinkedIn Engagement
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Learn how to create posts that get more likes, comments, and
-                  shares.
-                </p>
-                <Link
-                  href="#"
-                  className="text-primary font-medium hover:underline"
-                >
-                  Read more →
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition">
-              <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500"></div>
-              <div className="p-6">
-                <div className="text-sm text-gray-500 mb-2">Dec 8, 2024</div>
-                <h3 className="text-xl font-bold mb-2">
-                  How AI is Changing Content Creation
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Discover the future of professional content with AI
-                  assistance.
-                </p>
-                <Link
-                  href="#"
-                  className="text-primary font-medium hover:underline"
-                >
-                  Read more →
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition">
-              <div className="h-48 bg-gradient-to-br from-orange-400 to-red-500"></div>
-              <div className="p-6">
-                <div className="text-sm text-gray-500 mb-2">Dec 5, 2024</div>
-                <h3 className="text-xl font-bold mb-2">
-                  Best Times to Post on LinkedIn
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Data-driven insights on when your audience is most active.
-                </p>
-                <Link
-                  href="#"
-                  className="text-primary font-medium hover:underline"
-                >
-                  Read more →
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </section>

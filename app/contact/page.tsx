@@ -72,7 +72,6 @@ export default function ContactPage() {
             <Link href="/features" className="hover:text-primary">Features</Link>
 
             <Link href="/about" className="hover:text-primary">About</Link>
-            <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="text-primary font-medium">Contact</Link>
           </div>
           <div className="flex items-center space-x-4">

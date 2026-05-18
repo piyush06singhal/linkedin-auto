@@ -24,7 +24,6 @@ export default function AboutPage() {
             <Link href="/features" className="hover:text-primary">Features</Link>
 
             <Link href="/about" className="text-primary font-medium">About</Link>
-            <Link href="/blog" className="hover:text-primary">Blog</Link>
             <Link href="/contact" className="hover:text-primary">Contact</Link>
           </div>
           <div className="flex items-center space-x-4">
